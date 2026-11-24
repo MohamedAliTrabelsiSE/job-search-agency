@@ -14,6 +14,7 @@ from check_ready import ensure_ready
 from names import RANKER
 from draft_cv import _words
 from load_config import load_json
+from matching import compare
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -54,35 +55,35 @@ def _date_key(published):
 
 
 def rank_cards(cards, facts):
-    vocabulary = fact_words(facts)
-    banned = _banned(facts)
     kept = []
     skipped = []
     for card in cards:
-        target = _words(f"{card.get('title') or ''} {card.get('excerpt') or ''}") - banned
-        shared = sorted(target & vocabulary)
         scored = dict(card)
-        scored["score"] = len(shared)
-        scored["why"] = ", ".join(shared) if shared else "no overlap with your resume"
-        if shared:
+        scored.update(compare(card, facts))
+        if scored['decision'] != 'excluded':
             kept.append(scored)
         else:
             skipped.append(scored)
-    kept.sort(key=lambda card: (-card["score"], _date_key(card.get("published")), (card.get("company") or "").lower()))
+    order = {'recommended':0, 'stretch':1, 'needs_verification':2}
+    kept.sort(key=lambda card: (order[card['decision']], -card["score"], _date_key(card.get("published")), (card.get("company") or "").lower()))
     return kept, skipped
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description='Rank the pool from one search run.')
+    parser.add_argument('--run-dir', type=Path, required=True)
+    args = parser.parse_args()
     ensure_ready(ROOT)
     data = ROOT / "data"
-    pool_path = data / "pool.json"
+    pool_path = args.run_dir / "pool.json"
     if not pool_path.exists():
         sys.stderr.write("data/pool.json is missing. Run merge.py first.\n")
         return 2
     pool = load_json(pool_path)
     facts = load_json(data / "cv_facts.json")
     kept, skipped = rank_cards(pool.get("cards") or [], facts)
-    out = data / "shortlist.json"
+    out = args.run_dir / "shortlist.json"
     payload = {"count": len(kept), "cards": kept, "skipped": skipped}
     out.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"{RANKER}  shortlist {len(kept)}")

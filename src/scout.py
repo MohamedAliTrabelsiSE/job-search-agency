@@ -1,72 +1,49 @@
-"""Run the scouts that match data/preferences.json.
-
-Each scout is one call of discover.py with that region's boards and rules.
-They do not see each other's results. The merger does.
-"""
-
-import subprocess
-import sys
+"""Scout threads share the process-wide request budget and write isolated reports."""
+import argparse
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-
 from check_ready import ensure_ready
-from load_config import load_json
+from discover import discover, skipped_companies
+from load_config import load_json, load_simple_yaml
 from names import SCOUTS
 from places import scouts_for
+from state import write_json
 
 ROOT = Path(__file__).resolve().parents[1]
-
-RULES = {
-    "worldwide": ROOT / "config" / "rules.worldwide.yaml",
-    "dach": ROOT / "config" / "rules.relocation.yaml",
-    "benelux-ie": ROOT / "config" / "rules.relocation.yaml",
-    "nordics": ROOT / "config" / "rules.relocation.yaml",
-}
+RULES = {name: ROOT/'config'/('rules.worldwide.yaml' if name == 'worldwide' else 'rules.relocation.yaml')
+         for name in SCOUTS}
 
 
 def scout_plan(preferences):
-    plan = []
-    for name in scouts_for(preferences):
-        sources = ROOT / "config" / "sources" / f"{name}.yaml"
-        rules = RULES.get(name)
-        if sources.exists() and rules is not None:
-            plan.append((name, sources, rules))
-    return plan
+    return [(name, ROOT/'config/sources'/f'{name}.yaml', RULES[name])
+            for name in scouts_for(preferences) if (ROOT/'config/sources'/f'{name}.yaml').exists()]
+
+
+def run_scouts(preferences, out_dir, roles_path=None):
+    plan = scout_plan(preferences)
+    if not plan:
+        raise ValueError('No scout covers these preferences. Add supported sources before searching.')
+    skip = skipped_companies(roles_path) if roles_path else set()
+    def run_one(item):
+        name, sources, rules = item
+        print(f'{SCOUTS[name]} searching {name}', flush=True)
+        payload = discover(load_simple_yaml(sources), load_simple_yaml(rules), preferences, skip)
+        payload['scout'] = name
+        write_json(Path(out_dir)/f'scout-{name}.json', payload)
+        print(f"{SCOUTS[name]} coverage {payload['coverage']} candidates {payload['count']}", flush=True)
+        return payload
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        return list(pool.map(run_one, plan))
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--out-dir', type=Path, default=ROOT/'data')
+    args = parser.parse_args()
     ensure_ready(ROOT)
-    preferences = load_json(ROOT / "data" / "preferences.json")
-    plan = scout_plan(preferences)
-    if not plan:
-        sys.stderr.write("No scout matches this interest. Add a place the source list covers, or choose remote.\n")
-        return 2
-    skip = ROOT / "data" / "roles.json"
-    out_dir = ROOT / "data"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    def run_one(item):
-        name, sources, rules = item
-        out = out_dir / f"scout-{name}.json"
-        cmd = [
-            sys.executable,
-            str(ROOT / "src" / "discover.py"),
-            "--sources", str(sources),
-            "--rules", str(rules),
-            "--out", str(out),
-        ]
-        if skip.exists():
-            cmd.extend(["--skip", str(skip)])
-        speaker = SCOUTS.get(name, name)
-        cmd.extend(["--speaker", speaker])
-        print(f"{speaker}  {name}", flush=True)
-        return subprocess.run(cmd).returncode
-
-    with ThreadPoolExecutor(max_workers=4) as pool:
-        codes = list(pool.map(run_one, plan))
-    return 1 if any(codes) else 0
+    reports = run_scouts(load_json(ROOT/'data/preferences.json'), args.out_dir, ROOT/'data/roles.json')
+    return 0 if any(r['coverage']['healthy'] for r in reports) else 1
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+if __name__ == '__main__':
+    raise SystemExit(main())

@@ -1,0 +1,27 @@
+{
+  "reports": [
+    {
+      "scout": "worldwide",
+      "count": 3,
+      "sources": [
+        {"platform": "ashby", "company": "example-api", "status": "healthy", "jobs": 3},
+        {"platform": "ashby", "company": "example-offline", "status": "failed", "error": "fixture: board unavailable"}
+      ],
+      "errors": [{"company": "example-offline", "error": "fixture: board unavailable"}],
+      "candidates": [
+        {"company": "example-api", "title": "Backend Engineer", "location": "Remote, Global", "url": "https://example.com/jobs/typescript", "description": "Required: TypeScript and NodeJS. Build REST APIs. Work from anywhere in the world.", "published": "2026-11-24"},
+        {"company": "example-api", "title": "Go Backend Developer", "location": "Remote, Global", "url": "https://example.com/jobs/go", "description": "Required: hands-on Go. Build REST APIs. Work from anywhere in the world.", "published": "2026-11-24"},
+        {"company": "example-canada", "title": "Backend Engineer", "location": "Remote", "url": "https://example.com/jobs/canada", "description": "Required: TypeScript. Only residents of Canada may apply.", "published": "2026-11-24"}
+      ]
+    },
+    {
+      "scout": "dach",
+      "count": 1,
+      "sources": [{"platform": "ashby", "company": "example-move", "status": "healthy", "jobs": 1}],
+      "errors": [],
+      "candidates": [
+        {"company": "example-move", "title": "Backend Engineer", "location": "Berlin, Germany", "url": "https://example.com/jobs/move", "description": "Required: TypeScript. We provide relocation support.", "published": "2026-11-24"}
+      ]
+    }
+  ]
+}

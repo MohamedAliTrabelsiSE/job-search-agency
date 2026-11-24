@@ -6,7 +6,10 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -14,3 +17,4 @@ jobs:
           python-version: "3.11"
       - run: pip install -r requirements.txt
       - run: python -m unittest discover -s tests -p "test_*.py"
+      - run: python src/demo.py --no-render --root tmp/ci-demo

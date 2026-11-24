@@ -1,6 +1,7 @@
 {
   "interest": "both",
   "current_country": "Egypt",
+  "needs_visa_sponsorship": true,
   "places": ["Germany", "Netherlands"],
   "work_right": {
     "relocation": "Open to relocation; requires visa sponsorship",

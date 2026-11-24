@@ -98,7 +98,7 @@ def _overview(facts, target, right, experience, projects):
 
 
 def draft(facts, preferences, card):
-    target = _words(f"{card.get('title') or ''} {card.get('excerpt') or ''}")
+    target = _words(f"{card.get('title') or ''} {card.get('description') or card.get('excerpt') or ''}")
     work = preferences.get("work_right") or {}
     if card.get("path") == "worldwide":
         right = work.get("remote") or "Working remotely from the current country."
@@ -131,6 +131,8 @@ def draft(facts, preferences, card):
         }
         if proj.get("link"):
             item["link"] = proj["link"]
+        if proj.get('status'):
+            item['status'] = proj['status']
         projects.append(item)
 
     links = []
@@ -154,4 +156,8 @@ def draft(facts, preferences, card):
         "education": facts.get("education") or [],
         "languages": facts.get("languages") or "",
         "activities": facts.get("activities") or "",
+        "claim_sources": {
+            'experience': [{'company':job['company'], 'source':'cv_facts.experience', 'bullets':list(job.get('bullets') or [])} for job in experience],
+            'projects': [{'name':project['name'], 'source':'cv_facts.projects', 'bullets':list(project.get('bullets') or [])} for project in projects],
+        },
     }

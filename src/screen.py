@@ -7,13 +7,14 @@ are searched.
 
 import datetime
 import re
+import html
 
 TAG = re.compile(r"<[^>]+>")
 SPACE = re.compile(r"\s+")
 
 
 def plain(text):
-    return SPACE.sub(" ", TAG.sub(" ", text or "")).strip()
+    return SPACE.sub(" ", TAG.sub(" ", html.unescape(text or ""))).strip()
 
 
 def _has(title, phrases):

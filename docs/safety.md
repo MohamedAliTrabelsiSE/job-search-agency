@@ -17,11 +17,11 @@ The board APIs used here are the public posting feeds those vendors publish for 
 
 Do not raise the concurrency to scrape faster. Do not point this at a site that is not a public posting API. Do not add a headless browser that clicks Apply. If a vendor asks you to stop, stop.
 
-Greenhouse list responses omit the description. v0.1 fetches the description only for postings that already match title, location, and date, and it caps those fetches (`--content-cap`, default 20).
+Greenhouse list responses omit descriptions. Fetch full descriptions for matching title/location/date postings. An optional `--content-cap` makes coverage partial; the default fetches all matching descriptions. All scouts share one eight-request budget.
 
 ## Human approval
 
-A `text_pass` is a reading of the advertisement. The form can still ask "are you already allowed to work here?" and reject the answer. Opening that form, and any click on submit, is a person's decision. The agent that tailors a CV follows `src/audit.md` and stops at a file.
+Eligibility is an evidence-based reading of the ad. Unknown sponsorship stays unresolved even when relocation assistance is offered. The form may still reject a work-right answer. The agent follows `prompts/ats.md`, reports scoped checks, and stops at files. Local application-history commands record evidence; they never submit.
 
 ## Before this is public
 

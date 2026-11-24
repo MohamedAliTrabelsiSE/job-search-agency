@@ -220,6 +220,26 @@ def _fill(proto, parts):
     return new_p
 
 
+def _linked_fill(proto, text, targets, doc):
+    """Keep template run formatting while preserving clickable source URLs."""
+    import re
+    labels = sorted((label for label in targets if label), key=len, reverse=True)
+    parts = re.split('('+'|'.join(re.escape(label) for label in labels)+')', text) if labels else [text]
+    element = _fill(proto, parts)
+    for run in list(element):
+        if run.tag != qn('w:r'):
+            continue
+        label = ''.join(node.text or '' for node in run.iter(qn('w:t')))
+        if label not in targets:
+            continue
+        relationship = doc.part.relate_to(targets[label], 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink', is_external=True)
+        hyperlink = OxmlElement('w:hyperlink')
+        hyperlink.set(qn('r:id'), relationship)
+        element.replace(run, hyperlink)
+        hyperlink.append(run)
+    return element
+
+
 # The template line is about 10,000 twips wide. Calibri at 11pt is about 100 twips a letter.
 LINE_BUDGET = 10500
 SKILL_GAP = 640
@@ -444,8 +464,15 @@ def build(cv, out_path):
         add(_fill(proto["title"], [cv["headline"]]))
         add(copy.deepcopy(proto["after_title"]))
     add(copy.deepcopy(proto["before_contact"]))
+    contact_targets = {}
+    for row in cv.get('contact') or []:
+        for part in row:
+            if isinstance(part, tuple) and part[0] == 'link':
+                contact_targets[part[2].removeprefix('https://').removeprefix('http://')] = part[2]
+            elif isinstance(part,str) and '@' in part:
+                contact_targets[part] = 'mailto:'+part
     for line in _pack_contact(_contact_bits(cv)):
-        add(_fill(proto["contact"], [line]))
+        add(_linked_fill(proto['contact'], line, contact_targets, doc))
     add(copy.deepcopy(proto["after_contact"]))
     add(copy.deepcopy(proto["before_heading"]))
 
@@ -471,7 +498,10 @@ def build(cv, out_path):
         heading("PROJECTS")
         projects = cv["projects"]
         for index, proj in enumerate(projects):
-            add(_fill(proto["role"], [proj.get("name") or ""]))
+            targets = {proj.get('name'):proj['link'][1]} if proj.get('link') else {}
+            add(_linked_fill(proto['role'], proj.get('name') or '', targets, doc))
+            if proj.get('status'):
+                add(_fill(proto['body'], [proj['status']]))
             if (proj.get("stack") or "").strip():
                 add(_fill(proto["body"], [proj["stack"].strip()]))
             if (proj.get("tagline") or "").strip():
@@ -546,6 +576,8 @@ def to_text(cv):
         for proj in cv["projects"]:
             link = f' ({proj["link"][1]})' if proj.get("link") else ""
             lines.append(f"{_role_line(proj.get('name'), proj.get('stack'))}{link}")
+            if proj.get('status'):
+                lines.append(proj['status'])
             if (proj.get("tagline") or "").strip():
                 lines.append(proj["tagline"])
             for item in proj.get("bullets") or []:
@@ -614,6 +646,8 @@ def find_soffice():
     """LibreOffice writes the PDF. Word is the other converter."""
     found = shutil.which("soffice") or shutil.which("soffice.exe")
     if found:
+        if sys.platform == 'win32' and Path(found).with_suffix('.com').is_file():
+            return str(Path(found).with_suffix('.com'))
         return found
     roots = [
         os_programs(),
@@ -622,7 +656,7 @@ def find_soffice():
         Path.home() / "AppData" / "Local",
     ]
     for root in roots:
-        for name in ("soffice.exe", "soffice.com", "soffice"):
+        for name in ("soffice.com", "soffice.exe", "soffice"):
             path = root / "LibreOffice" / "program" / name
             if path.is_file():
                 return str(path)
@@ -649,9 +683,11 @@ def _soffice_command(soffice, docx_path, profile):
 
 
 def _convert_with_soffice(soffice, docx_path):
-    profile = Path(tempfile.mkdtemp(prefix="resume-pdf-"))
-    command = _soffice_command(soffice, docx_path, profile)
-    subprocess.run(command, check=True, timeout=180, capture_output=True)
+    with tempfile.TemporaryDirectory(prefix='resume-pdf-', ignore_cleanup_errors=True) as profile:
+        command = _soffice_command(soffice, docx_path, profile)
+        result = subprocess.run(command, timeout=180, capture_output=True, text=True)
+        if result.returncode:
+            raise RuntimeError('PDF conversion failed: ' + (result.stderr or result.stdout or 'converter returned no details').strip())
 
 
 def _convert_with_word(docx_path, pdf_path):
@@ -702,9 +738,32 @@ def render_files(cv, out_dir, preferences=None):
     docx_path = folder / "resume.docx"
     text_path = folder / "resume.txt"
     ready = normalize(cv)
-    build(ready, str(docx_path))
-    text_path.write_text(to_text(ready), encoding="utf-8")
-    pdf_path = to_pdf(docx_path)
+    # Convert in an isolated directory. A converter failure cannot leave a new
+    # DOCX beside an old PDF and falsely imply they are the same revision.
+    with tempfile.TemporaryDirectory(prefix='.render-', dir=folder) as staging:
+        stage = Path(staging)
+        staged_docx = stage/'resume.docx'
+        build(ready, str(staged_docx))
+        (stage/'resume.txt').write_text(to_text(ready), encoding='utf-8')
+        staged_pdf = to_pdf(staged_docx)
+        if not staged_pdf.read_bytes().startswith(b'%PDF-'):
+            raise RuntimeError('Converter output is not a PDF.')
+        outputs = [docx_path, text_path, folder/'resume.pdf']
+        backups = {path:path.read_bytes() if path.exists() else None for path in outputs}
+        replaced = []
+        try:
+            for destination in outputs:
+                (stage/destination.name).replace(destination)
+                replaced.append(destination)
+        except OSError as exc:
+            for destination in replaced:
+                old = backups[destination]
+                if old is None:
+                    destination.unlink(missing_ok=True)
+                else:
+                    destination.write_bytes(old)
+            raise RuntimeError('Could not publish resume files; check read-only files or open document locks. Previous outputs were retained.') from exc
+    pdf_path = folder/'resume.pdf'
     return docx_path, text_path, pdf_path
 
 

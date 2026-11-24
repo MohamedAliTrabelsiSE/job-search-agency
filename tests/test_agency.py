@@ -86,7 +86,7 @@ class AgencyTest(unittest.TestCase):
         issues = findings(cv, FACTS, card)
         self.assertTrue(any(item["quote"] == "Kubernetes" for item in issues))
         self.assertTrue(any(item["quote"] == "visa" for item in issues))
-        revised = revise(cv, issues)
+        revised = revise(cv, issues, FACTS, PREFS, card)
         self.assertEqual(findings(revised, FACTS, card), [])
 
     def test_relocation_draft_keeps_the_visa_line(self):
@@ -122,7 +122,8 @@ class AgencyTest(unittest.TestCase):
             cards = merge_cards([first, second], {}, limit=None)
         kept, _skipped = rank_cards(cards, FACTS)
         self.assertEqual(kept[0]["company"], "apico")
-        self.assertGreater(kept[0]["score"], kept[1]["score"])
+        self.assertEqual(len(kept), 1)
+        self.assertEqual(_skipped[0]['company'], 'salesco')
 
     def test_rank_ignores_never_add_and_keeps_every_match(self):
         cards = [
@@ -137,7 +138,7 @@ class AgencyTest(unittest.TestCase):
         self.assertEqual([card["company"] for card in kept], ["full", "rest", "node", "real"])
         self.assertEqual([card["company"] for card in skipped], ["kco", "sales"])
         self.assertNotIn("kubernetes", kept[0]["why"])
-        self.assertEqual(skipped[0]["why"], "no overlap with your resume")
+        self.assertEqual(skipped[0]["why"], "no technical overlap with your resume")
 
     def test_draft_keeps_the_persons_headline_and_skips_empty_activities(self):
         card = {"path": "worldwide", "title": "Staff Kubernetes Engineer", "excerpt": "Go and Kubernetes"}
