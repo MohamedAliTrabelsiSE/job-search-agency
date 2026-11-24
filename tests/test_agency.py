@@ -236,6 +236,19 @@ class AgencyTest(unittest.TestCase):
             render_cv._convert_with_word = previous_word
         self.assertIn("resume.docx", str(caught.exception))
 
+    def test_second_sheet_header_is_small(self):
+        import zipfile
+        from render_cv import build
+        facts = load_json(ROOT / "config" / "cv_facts.example.json")
+        prefs = load_json(ROOT / "config" / "preferences.example.json")
+        cv = draft(facts, prefs, {"path": "worldwide", "title": "", "excerpt": ""})
+        path = Path(tempfile.mkdtemp()) / "resume.docx"
+        build(normalize(cv), str(path))
+        xml = zipfile.ZipFile(path).read("word/header1.xml").decode("utf-8")
+        self.assertNotIn('w:val="46"', xml)
+        self.assertIn("ADA OKONKWO", xml)
+        self.assertEqual(xml.count("<w:p "), 2)
+
     def test_header_name_has_no_letter_spacing(self):
         self.assertEqual(_header_name("Hana Wrighton"), "HANA WRIGHTON")
         self.assertEqual(_header_name("Mohamed Ali Trabelsi"), "MOHAMED ALI TRABELSI")
