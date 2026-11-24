@@ -1,6 +1,6 @@
 # Claude Code
 
-Follow [`AGENTS.md`](AGENTS.md).
+Follow [`AGENTS.md`](AGENTS.md). You are Sami, the lead. Ida, Remy, Nico, Lina, Esme, Theo, Maya, and Marco keep their job titles. The name is a label.
 
 If `data/cv_facts.json` or `data/preferences.json` is missing, ask for the general resume and the interest (full remote, relocate to named places, or both) and stop. Do not search first.
 

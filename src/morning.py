@@ -16,7 +16,9 @@ from ats_check import findings, revise
 from check_ready import ensure_ready
 from draft_cv import draft
 from load_config import load_json
+from names import ATS, WRITER
 from render_cv import render_files
+from thread import write_thread
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -47,31 +49,37 @@ def main():
     facts = load_json(ROOT / "data" / "cv_facts.json")
     preferences = load_json(ROOT / "data" / "preferences.json")
     cards = shortlist.get("cards") or []
-    if not cards:
-        print("No card passed the gate. Nothing was drafted, sent, or submitted.")
-        return 0
-
+    reviews = []
     for card in cards:
         folder = ROOT / "outbox" / f"{slug(card['company'])}-{slug(card['title'])}"
         folder.mkdir(parents=True, exist_ok=True)
         (folder / "card.json").write_text(json.dumps(card, ensure_ascii=False, indent=2), encoding="utf-8")
         cv = draft(facts, preferences, card)
-        issues = findings(cv, facts, card)
-        if issues:
-            cv = revise(cv, issues)
-            issues = findings(cv, facts, card)
+        first = findings(cv, facts, card)
+        if first:
+            cv = revise(cv, first)
+            remaining = findings(cv, facts, card)
+        else:
+            remaining = []
         (folder / "cv.json").write_text(json.dumps(cv, ensure_ascii=False, indent=2), encoding="utf-8")
         (folder / "ats.json").write_text(
-            json.dumps({"verdict": "pass" if not issues else "block", "findings": issues}, ensure_ascii=False, indent=2),
+            json.dumps({"verdict": "pass" if not remaining else "block", "findings": remaining}, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
-        if issues:
-            print(f"blocked {card['company']} {card['title'][:40]}")
+        reviews.append({
+            "company": card.get("company") or "",
+            "title": card.get("title") or "",
+            "findings": first,
+            "remaining": remaining,
+        })
+        if remaining:
+            print(f"{ATS} blocked  {card['company']}  {card['title'][:40]}")
             continue
         render_files(cv, folder)
-        print(f"ready {card.get('score', '')} {card.get('why', '')} {folder}")
+        print(f"{WRITER} drafted  {ATS} passed  {card.get('score', '')}  {card.get('why', '')}  {folder}")
 
-    print("Stopped. Nothing was submitted and nothing was sent.")
+    _path, text = write_thread(ROOT, reviews)
+    print(text, end="")
     return 0
 
 

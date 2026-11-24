@@ -1,6 +1,6 @@
 # job-search-agency
 
-A small agency that looks for jobs, then stops and waits for you. You talk to one lead. The lead asks three questions, sends the team out, and comes back with every role that overlaps your resume, best match first. Each of those roles gets its own resume. Nothing is emailed and nothing is submitted until you say yes to a specific one.
+A small agency that looks for jobs, then stops and waits for you. You talk only to Sami. Sami asks three questions, sends the team out, and comes back with every role that overlaps your resume, best match first. Each of those roles gets its own resume. Nothing is emailed and nothing is submitted until you say yes to a specific one.
 
 Open this repo in Cursor, Claude, Codex, DeepSeek, or anything else that reads [`AGENTS.md`](AGENTS.md). That file is the contract. This page is the picture.
 
@@ -21,24 +21,24 @@ Feedback goes in a [discussion](https://github.com/MohamedAliTrabelsiSE/job-sear
 
 ![Six steps: you talk to the lead, answer three questions, the inbox and scouts start together, matching jobs come back, each gets a resume, then everything stops](docs/how-it-works.gif)
 
-1. You talk only to the lead.
-2. The lead asks for your resume, whether you want remote work or relocation or both, and whether you can legally work that way. It reads the resume back and waits.
-3. The inbox and the scouts start together. They hand back notes. They do not talk to each other.
-4. Repeats, companies you already applied to, and rejections drop out. Every remaining ad that shares words with your resume is kept, best first. An ad with no shared words is listed and not drafted.
-5. Each kept job gets a resume made from the same facts. The page is one column: your headline, then experience, projects, education, skills, and languages.
+1. You talk only to Sami.
+2. Sami asks for your resume, whether you want remote work or relocation or both, and whether you can legally work that way. Sami reads the resume back and waits.
+3. Ida reads the mail. Remy, Nico, Lina, and Esme search at the same time. They hand back notes. They do not talk to each other.
+4. Repeats, companies you already applied to, and rejections drop out. Theo keeps every remaining ad that shares words with your resume, best first. An ad with no shared words is listed and not drafted.
+5. Maya makes one resume per kept job, from the same facts. Marco checks it once. The page is one column: your headline, then experience, projects, education, skills, and languages.
 6. The run stops. You decide.
 
 ## Who goes looking
 
 ![Remote sends a worldwide scout, relocate sends one scout per region, both sends both](docs/who-searches.gif)
 
-Germany and Austria share a scout. So do the Netherlands, Belgium, and Ireland. So do Sweden, Denmark, Finland, and Norway. The inbox runs only when you have connected mail. Without that, the search still runs.
+Remy searches worldwide. Nico covers Germany and Austria. Lina covers the Netherlands, Belgium, and Ireland. Esme covers Sweden, Denmark, Finland, and Norway. Ida runs only when you have connected mail. Without that, the search still runs.
 
 ## How a resume is checked
 
 ![The writer drafts from your real experience, the ATS specialist checks it, findings go back once, the writer fixes once, then the resume passes or is blocked](docs/ats-loop.gif)
 
-The writer fills the resume fields and does not design a second page. `src/render_cv.py` is the only layout. It may reorder and reword bullets. It may not add a skill, a metric, or a job that was not in your general resume. A gap stays a gap. The visa line appears only on a relocation resume. The specialist sends findings once, the writer fixes once, and there is no third draft. A blocked resume is not saved. A recruiter who wrote with no specific opening gets the general resume you already gave.
+Maya fills the resume fields and does not design a second page. `src/render_cv.py` is the only layout. Maya may reorder and reword bullets. Maya may not add a skill, a metric, or a job that was not in your general resume. A gap stays a gap. The visa line appears only on a relocation resume. Marco sends findings once, Maya fixes once, and there is no third draft. A blocked resume is not saved. A recruiter who wrote with no specific opening gets the general resume you already gave.
 
 ## Which ads get through
 
@@ -48,20 +48,20 @@ A pass only means the text of the ad got through. It is not permission to apply.
 
 ## What each one writes
 
-You never talk to the workers. The only reply inside the agency is the one list of findings from the ATS specialist to the writer.
+You never talk to the workers. The only reply inside the agency is Marco's list of findings, which Maya fixes once. The name is what you see. The job is the rule.
 
 | Who | Writes |
 | --- | --- |
-| Inbox | `data/inbox.json`, and rejected companies in `data/roles.json` |
-| Scouts | `data/scout-worldwide.json`, `data/scout-dach.json`, `data/scout-benelux-ie.json`, `data/scout-nordics.json` |
+| Ida, inbox | `data/inbox.json`, and rejected companies in `data/roles.json` |
+| Remy, Nico, Lina, Esme | `data/scout-worldwide.json`, `data/scout-dach.json`, `data/scout-benelux-ie.json`, `data/scout-nordics.json` |
 | Merger | `data/pool.json`, every text-pass card |
-| Ranker | `data/shortlist.json`, every resume match, best first |
-| Writer | `outbox/<company>-<title>/cv.json` |
-| ATS specialist | `outbox/<company>-<title>/ats.json` |
+| Theo, ranker | `data/shortlist.json`, every resume match, best first |
+| Maya, writer | `outbox/<company>-<title>/cv.json` |
+| Marco, ATS specialist | `outbox/<company>-<title>/ats.json` |
 
 ## First run
 
-If `data/cv_facts.json` or `data/preferences.json` is missing, the lead stops. No scout runs. It asks, in this order:
+If `data/cv_facts.json` or `data/preferences.json` is missing, Sami stops. No scout runs. It asks, in this order:
 
 1. **Your general resume.** A PDF, a text file, or a paste. It reads only what is written, shows you that reading, and waits for you to correct it. Then it saves `data/cv_facts.json`: contact, education, each role, the bullets you already have, languages, activities, and `never_add` (tools the resume does not claim).
 2. **Your interest.** Full remote from where you already live, relocate, or both. Relocate asks which places. More than one place is normal.

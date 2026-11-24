@@ -11,6 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from check_ready import ensure_ready
+from names import RANKER
 from draft_cv import _words
 from load_config import load_json
 
@@ -84,7 +85,7 @@ def main():
     out = data / "shortlist.json"
     payload = {"count": len(kept), "cards": kept, "skipped": skipped}
     out.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"shortlist {len(kept)}")
+    print(f"{RANKER}  shortlist {len(kept)}")
     for card in kept:
         print(f"  {card['score']:3}  {card['company']}  {card['why']}")
     if skipped:

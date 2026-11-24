@@ -22,6 +22,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from check_ready import ensure_ready
+from names import INBOX
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CREDS = Path(os.path.expanduser("~")) / ".dsh" / "smtp.txt"
@@ -104,6 +105,15 @@ def remember_rejection(roles_path, company):
         roles_path.write_text(json.dumps(roles, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def record_skip(out, reason):
+    path = Path(out)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps({"count": 0, "messages": [], "skipped": reason}, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description="Classify the inbox. Does not send.")
     parser.add_argument("--creds", default=str(DEFAULT_CREDS))
@@ -113,7 +123,8 @@ def main():
     ensure_ready(ROOT)
     creds = Path(args.creds)
     if not creds.exists():
-        print("inbox skipped: no credential file")
+        print(f"{INBOX} skipped: no credential file")
+        record_skip(args.out, "no credential file")
         return 0
 
     address, password = load_creds(creds)
@@ -122,7 +133,8 @@ def main():
         mailbox = imaplib.IMAP4_SSL("imap.gmail.com", timeout=20)
         mailbox.login(address, password)
     except (OSError, imaplib.IMAP4.error) as exc:
-        print(f"inbox skipped: {exc}")
+        print(f"{INBOX} skipped: {exc}")
+        record_skip(args.out, "could not connect")
         return 0
     mailbox.select("INBOX")
     _, data = mailbox.search(None, f"(SINCE {since})")
@@ -153,7 +165,7 @@ def main():
     counts = {}
     for row in rows:
         counts[row["kind"]] = counts.get(row["kind"], 0) + 1
-    print(f"inbox {len(rows)} {counts}")
+    print(f"{INBOX}  {len(rows)} {counts}")
     print(out)
     return 0
 

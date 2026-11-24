@@ -14,6 +14,7 @@ from load_config import load_json, load_simple_yaml
 from merge import merge_cards
 from places import scouts_for
 from rank import rank_cards
+from thread import build_thread
 from render_cv import normalize, to_text
 from screen import classify_worldwide
 
@@ -139,6 +140,50 @@ class AgencyTest(unittest.TestCase):
         self.assertLess(text.index("PROJECTS"), text.index("EDUCATION"))
         self.assertLess(text.index("EDUCATION"), text.index("SKILLS"))
         self.assertLess(text.index("SKILLS"), text.index("LANGUAGES"))
+
+    def test_thread_shows_one_reply_from_marco_to_maya(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            data = root / "data"
+            data.mkdir()
+            (data / "preferences.json").write_text(
+                json.dumps({"interest": "both", "places": ["Germany"]}),
+                encoding="utf-8",
+            )
+            (data / "inbox.json").write_text(
+                json.dumps({"count": 0, "messages": [], "skipped": "no credential file"}),
+                encoding="utf-8",
+            )
+            (data / "scout-worldwide.json").write_text(
+                json.dumps({"candidates": [{"sponsorship": "blocked"}, {"sponsorship": "offered"}]}),
+                encoding="utf-8",
+            )
+            (data / "scout-dach.json").write_text(
+                json.dumps({"candidates": [{"sponsorship": "offered"}]}),
+                encoding="utf-8",
+            )
+            (data / "shortlist.json").write_text(
+                json.dumps({
+                    "cards": [{"company": "apico", "title": "Backend Engineer"}],
+                    "skipped": [{"company": "salesco"}],
+                }),
+                encoding="utf-8",
+            )
+            text = build_thread(root, [{
+                "company": "apico",
+                "title": "Backend Engineer",
+                "findings": [{"quote": "visa"}],
+                "remaining": [],
+            }])
+        self.assertIn("Ida → Sami    Mail was not connected. Nothing sent.", text)
+        self.assertIn("Remy → Sami    2 jobs, 1 passed the text check.", text)
+        self.assertIn("Nico → Sami    1 job, 1 passed the text check.", text)
+        self.assertNotIn("Lina →", text)
+        self.assertIn("Theo → Maya    1 job, best first. 1 skipped, no overlap.", text)
+        self.assertIn("Maya → Marco    resume for Backend Engineer at apico.", text)
+        self.assertIn("Marco → Maya    visa. Maya fixed that once.", text)
+        self.assertIn("Sami → you    1 folder. Nothing submitted and nothing sent.", text)
+        self.assertEqual(text.count("Marco → Maya"), 1)
 
 
 if __name__ == "__main__":

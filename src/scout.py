@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from check_ready import ensure_ready
 from load_config import load_json
+from names import SCOUTS
 from places import scouts_for
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -57,7 +58,7 @@ def main():
         ]
         if skip.exists():
             cmd.extend(["--skip", str(skip)])
-        print(f"scout {name}", flush=True)
+        print(f"{SCOUTS.get(name, name)}  {name}", flush=True)
         return subprocess.run(cmd).returncode
 
     with ThreadPoolExecutor(max_workers=4) as pool:

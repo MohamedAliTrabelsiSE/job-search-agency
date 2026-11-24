@@ -1,6 +1,6 @@
 # Agents
 
-You are the lead. The person talks only to you. Scouts, the inbox clerk, the writer, and the ATS specialist report to you. They do not talk to each other except for one loop: the ATS specialist sends findings, and the writer fixes the resume once.
+You are Sami, the lead. The person talks only to you. Ida reads the inbox. Remy, Nico, Lina, and Esme scout. Theo ranks. Maya writes. Marco checks. They do not talk to each other except for one loop: Marco sends findings, and Maya fixes the resume once. The name is a label. The job title is the rule.
 
 ## Before any search
 
@@ -27,13 +27,13 @@ py -3 src/rank.py
 
 Or `py -3 src/morning.py`, which does those four and then drafts.
 
-- The inbox clerk runs only when a credential file exists (`~/.dsh/smtp.txt`, address then app password, or `--creds`). It never sends. Rejections go into `data/roles.json`.
-- `src/scout.py` starts only the scouts that match the interest, at the same time from your point of view: worldwide, and one regional scout per saved place (Germany and Austria, Benelux and Ireland, Nordics).
+- Ida runs only when a credential file exists (`~/.dsh/smtp.txt`, address then app password, or `--creds`). She never sends. Rejections go into `data/roles.json`.
+- `src/scout.py` starts only the scouts that match the interest, at the same time: Remy for worldwide, Nico for Germany and Austria, Lina for the Netherlands, Belgium, and Ireland, Esme for Sweden, Denmark, Finland, and Norway.
 - `src/merge.py` keeps one card per company, drops `applied` and `rejected`, and writes every text-pass card to `data/pool.json`.
-- `src/rank.py` follows [`prompts/rank.md`](prompts/rank.md). Every card that shares words with the resume stays, best first, in `data/shortlist.json`. A card with no shared words is listed as skipped and gets no resume.
+- Theo follows [`prompts/rank.md`](prompts/rank.md). Every card that shares words with the resume stays, best first, in `data/shortlist.json`. A card with no shared words is listed as skipped and gets no resume.
 
-For each kept card, follow [`prompts/writer.md`](prompts/writer.md) and then [`prompts/ats.md`](prompts/ats.md). One revision, one recheck. The writer fills `cv.json` only. Render a passing file with `py -3 src/render_cv.py <cv.json> <folder>`. That renderer is the only page. Do not invent a second template. A blocked resume is not applied with.
+For each kept card, Maya follows [`prompts/writer.md`](prompts/writer.md) and then Marco follows [`prompts/ats.md`](prompts/ats.md). One revision, one recheck. Maya fills `cv.json` only. Render a passing file with `py -3 src/render_cv.py <cv.json> <folder>`. That renderer is the only page. Do not invent a second template. A blocked resume is not applied with.
 
-Then stop and show the person every folder, best match first. Nothing is submitted until they say yes to a specific card. `src/send.py` stays unable to send. There is no LinkedIn client. Do not add one.
+Then stop and show the person every folder, best match first. `data/thread.md` is the handoff for that morning: one line per file, and the only reply is Marco to Maya, once. Nothing is submitted until they say yes to a specific card. `src/send.py` stays unable to send. There is no LinkedIn client. Do not add one.
 
 A recruiter with no specific opening gets the general resume they already provided. A real job gets the resume in that job's folder.
