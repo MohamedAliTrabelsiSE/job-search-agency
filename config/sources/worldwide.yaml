@@ -1,0 +1,8 @@
+ashby:
+  - huggingface
+  - mistral
+
+lever: []
+
+greenhouse:
+  - gitlab

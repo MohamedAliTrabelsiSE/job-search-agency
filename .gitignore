@@ -1,0 +1,31 @@
+# Personal data. One `git add .` must not publish a CV, a phone number, or a pipeline.
+data/*
+!data/.gitkeep
+outbox/*
+!outbox/.gitkeep
+
+profile.json
+roles.json
+candidates.json
+gated.json
+cv_facts.json
+preferences.json
+inbox.json
+shortlist.json
+scout-*.json
+smtp.txt
+.env
+.env.*
+*.pem
+
+# Generated CVs. The example fixtures under examples/ are the only PDFs allowed in git.
+*.pdf
+!examples/**/*.pdf
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.DS_Store

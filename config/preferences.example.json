@@ -1,0 +1,9 @@
+{
+  "interest": "both",
+  "current_country": "Egypt",
+  "places": ["Germany", "Netherlands"],
+  "work_right": {
+    "relocation": "Open to relocation; requires visa sponsorship",
+    "remote": "Will keep working remotely from Egypt"
+  }
+}

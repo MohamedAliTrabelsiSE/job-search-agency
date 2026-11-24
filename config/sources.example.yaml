@@ -1,0 +1,11 @@
+# Public posting-board tokens. These are not secrets.
+# Adzuna is intentionally absent: it needs an API key, and v0.1 does not.
+
+ashby:
+  - augustus
+  - almedia
+  - adjoe
+
+lever: []
+
+greenhouse: []

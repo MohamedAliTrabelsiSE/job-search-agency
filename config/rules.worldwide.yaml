@@ -1,0 +1,66 @@
+mode: worldwide
+cutoff_days: 21
+
+location_tokens:
+  - remote
+  - worldwide
+  - anywhere
+  - global
+  - distributed
+
+title_allow:
+  - backend
+  - back-end
+  - back end
+  - full stack
+  - full-stack
+  - fullstack
+  - software engineer
+  - software developer
+  - product engineer
+  - platform engineer
+
+seniority_block:
+  - senior
+  - staff
+  - principal
+  - lead
+  - head
+  - director
+  - manager
+  - architect
+  - intern
+  - working student
+
+offer_phrases:
+  - work from anywhere
+  - anywhere in the world
+  - worldwide
+  - any country
+
+block_phrases:
+  - eu only
+  - europe only
+  - us only
+  - united states only
+  - authorized to work
+  - must be based
+  - existing right to work
+  - right to work in
+
+country_lock:
+  - germany
+  - berlin
+  - munich
+  - netherlands
+  - amsterdam
+  - ireland
+  - dublin
+  - sweden
+  - stockholm
+  - france
+  - paris
+  - united states
+  - usa
+  - uk
+  - london

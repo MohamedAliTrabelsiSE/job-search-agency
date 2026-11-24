@@ -1,0 +1,71 @@
+mode: relocation
+cutoff_days: 21
+
+location_tokens:
+  - germany
+  - berlin
+  - munich
+  - hamburg
+  - austria
+  - vienna
+  - netherlands
+  - amsterdam
+  - belgium
+  - brussels
+  - ireland
+  - dublin
+  - sweden
+  - stockholm
+  - denmark
+  - copenhagen
+  - finland
+  - helsinki
+  - norway
+  - oslo
+
+title_allow:
+  - backend
+  - back-end
+  - back end
+  - full stack
+  - full-stack
+  - fullstack
+  - software engineer
+  - software developer
+  - product engineer
+  - platform engineer
+
+seniority_block:
+  - senior
+  - staff
+  - principal
+  - lead
+  - head
+  - director
+  - manager
+  - architect
+  - intern
+  - working student
+
+sponsorship_phrases:
+  - visa sponsorship
+  - visa support
+  - relocation support
+  - relocation package
+  - relocation assistance
+  - we sponsor
+
+block_phrases:
+  - no visa sponsorship
+  - not able to offer visa sponsorship
+  - unable to offer visa sponsorship
+  - not able to sponsor
+  - unable to sponsor
+  - cannot sponsor
+  - do not sponsor
+  - don't sponsor
+  - no relocation
+  - must already have the right to work
+  - existing right to work
+  - must already be based
+  - must be based in

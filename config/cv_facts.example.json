@@ -1,0 +1,40 @@
+{
+  "name": "Ada Okonkwo",
+  "headline_default": "Backend Engineer",
+  "email": "ada.okonkwo@example.com",
+  "phone": "+20 100 000 0000",
+  "location": "Cairo, Egypt",
+  "links": [
+    {"text": "GitHub", "url": "https://github.com/example"}
+  ],
+  "languages": "English (C1), Arabic (native)",
+  "activities": "",
+  "never_add": ["Kubernetes", "Go"],
+  "tech": [
+    ["Languages", "TypeScript, Python"],
+    ["Backend", "Node.js, REST APIs"]
+  ],
+  "experience": [
+    {
+      "title": "Backend Engineer",
+      "dates": "2024 – present",
+      "company": "Example Studio",
+      "stack": "TypeScript, Node.js",
+      "bullets": [
+        "Build REST APIs in TypeScript for a product used by paying customers."
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Sample API",
+      "tagline": "A small public API.",
+      "stack": "TypeScript",
+      "bullets": ["Serves a JSON API with tests in the same repository."],
+      "link": {"text": "GitHub", "url": "https://github.com/example/sample-api"}
+    }
+  ],
+  "education": [
+    {"degree": "Engineering degree", "dates": "2020 – 2025", "school": "Example University"}
+  ]
+}

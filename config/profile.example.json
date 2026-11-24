@@ -1,0 +1,24 @@
+{
+  "name": "Ada Okonkwo",
+  "location": "Cairo, Egypt",
+  "email": "ada.okonkwo@example.com",
+  "phone": "+20 100 000 0000",
+  "linkedin": "https://www.linkedin.com/in/example",
+  "github": "https://github.com/example",
+  "portfolio": "https://example.com",
+  "years_experience": 2,
+  "graduation": "2026",
+  "enrolled_student": false,
+  "education_level": "Five-year engineering degree, master's level",
+  "salary_eur": 70000,
+  "availability": "3 months from offer",
+  "visa_answer": "requires sponsorship now",
+  "work_right": "none in the destination country",
+  "relocation_line": "Open to relocation; requires visa sponsorship",
+  "languages": {
+    "English": "C1",
+    "French": "B2",
+    "Arabic": "native"
+  },
+  "never_add": ["Kubernetes", "Terraform", "Rust", "Go"]
+}
