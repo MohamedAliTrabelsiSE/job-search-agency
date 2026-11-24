@@ -1,0 +1,31 @@
+name: Feedback
+description: Something was confusing, wrong, or missing.
+title: "[Feedback] "
+body:
+  - type: markdown
+    attributes:
+      value: Do not paste a real resume, a phone number, or a mail password.
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Where did you run it?
+      options:
+        - Cursor
+        - Codex
+        - Claude
+        - DeepSeek
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened?
+    validations:
+      required: true

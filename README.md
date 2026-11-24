@@ -4,6 +4,19 @@ A small agency that looks for jobs, then stops and waits for you. You talk to on
 
 Open this repo in Cursor, Claude, Codex, DeepSeek, or anything else that reads [`AGENTS.md`](AGENTS.md). That file is the contract. This page is the picture.
 
+## Start here
+
+You need Python 3.11.
+
+```bash
+pip install -r requirements.txt
+python -m unittest discover -s tests -p "test_*.py"
+```
+
+Then open this folder in your agent and wait. It asks three questions before it searches. On Windows, if `python` is not on PATH, use `py -3`.
+
+Feedback goes in a [discussion](https://github.com/MohamedAliTrabelsiSE/job-search-agency/discussions) or an [issue](https://github.com/MohamedAliTrabelsiSE/job-search-agency/issues). Do not paste a real resume, a phone number, or a mail password. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## A morning
 
 ![Six steps: you talk to the lead, answer three questions, the inbox and scouts start together, matching jobs come back, each gets a resume, then everything stops](docs/how-it-works.gif)
@@ -108,6 +121,10 @@ docs/              the diagrams on this page, and safety.md
 data/              gitignored. created on your machine
 outbox/            gitignored resumes, one folder per job
 ```
+
+## Known limits
+
+Some board names in `config/sources/` return nothing. The resume is a `.docx` plus `resume.txt`, not a PDF. `src/send.py` exits on purpose: this repo cannot email anyone and cannot click Apply.
 
 ## Terms
 
