@@ -331,32 +331,23 @@ def _replace_first_text(paragraphs, new_text):
     return False
 
 
-def _tighten_header(part):
-    """The template banner is 23pt. On the next sheet that name eats the page."""
+def _clear_header(part):
+    """The template repeats the name at the top of the next sheet. That banner is removed."""
     hdr = part._element
-    for tag in ("w:sz", "w:szCs"):
-        for node in hdr.iter(qn(tag)):
-            if node.get(qn("w:val")) == "46":
-                node.set(qn("w:val"), "22")
-    seen_rule = False
     for paragraph in [child for child in list(hdr) if child.tag == qn("w:p")]:
-        has_rule = paragraph.find(".//" + qn("w:pict")) is not None
-        if seen_rule:
-            hdr.remove(paragraph)
-        elif has_rule:
-            seen_rule = True
+        hdr.remove(paragraph)
+    hdr.append(OxmlElement("w:p"))
 
 
 def _apply_frame(doc, cv):
     """The template keeps a sample name in the header and a sample line in the footer."""
-    spaced = _header_name(cv.get("name") or "")
     contact = _contact_text(cv)
     for section in doc.sections:
         headers = (section.header, section.first_page_header, section.even_page_header)
         footers = (section.footer, section.first_page_footer, section.even_page_footer)
         for part in headers:
-            if part is not None and spaced and _replace_first_text(part.paragraphs, spaced):
-                _tighten_header(part)
+            if part is not None:
+                _clear_header(part)
         for part in footers:
             if part is not None and contact:
                 _replace_first_text(part.paragraphs, contact)

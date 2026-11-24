@@ -2,7 +2,7 @@
 
 This is the map of `templates/professional.docx`. Fill `cv.json`, then run `src/render_cv.py`. Do not turn this file into the resume, and do not copy the sample words below.
 
-From the second sheet, a small header shows the name in capitals. The large name stays on the first sheet only.
+The name is on the first sheet only. Later sheets do not repeat it.
 
 Name
 
