@@ -9,6 +9,7 @@ sys.path.insert(0, str(ROOT/'src'))
 from discover import discover, keep
 from load_config import load_json, load_simple_yaml
 from screen import title_ok, seniority_blocked
+from eligibility import assess
 
 FACTS = load_json(ROOT/'config/cv_facts.example.json')
 PREFS = load_json(ROOT/'config/preferences.example.json')
@@ -35,6 +36,29 @@ class EvidenceTest(unittest.TestCase):
         self.assertIn('Nice to have:\nExperience with Go.',card['description'])
         self.assertEqual(card['description_raw'],job['description'])
         self.assertEqual(card['eligibility']['status'],'eligible')
+
+
+class RestrictionTest(unittest.TestCase):
+    def test_job_restrictions_override_worldwide_marketing(self):
+        prefs=dict(PREFS,current_country='Tunisia')
+        cases=[
+            ('Remote, Global','Hiring only residents of Brazil. We serve customers worldwide.','excluded'),
+            ('Remote, North America','Our team operates worldwide.','excluded'),
+            ('Remote, Global','This is an in-person role in San Francisco.','excluded'),
+            ('Remote, Global','This position is on-site in San Francisco.','excluded'),
+            ('Remote, Atlantis','Our team operates worldwide.','needs_verification'),
+            ('Remote, Global','Only residents of Atlantis may apply.','needs_verification'),
+            ('Remote, LATAM','Our team operates worldwide.','excluded'),
+        ]
+        for location,text,expected in cases:
+            with self.subTest(location=location,text=text):
+                result=assess({'location':location,'description':text},prefs,'worldwide')
+                self.assertEqual(result['status'],expected)
+                self.assertTrue(result['evidence'])
+
+    def test_structured_office_metadata_overrides_remote_marketing(self):
+        result=assess({'location':'Remote, Global','workplace_type':'onsite','description':'Work worldwide.'},PREFS,'worldwide')
+        self.assertEqual(result['status'],'excluded')
 
 
 if __name__=='__main__':

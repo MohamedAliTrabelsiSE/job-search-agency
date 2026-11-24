@@ -14,9 +14,22 @@ COUNTRIES = {
     'italy': ['italy', 'milan', 'rome'], 'united kingdom': ['united kingdom', 'uk', 'london'],
     'united states': ['united states', 'usa', 'us'], 'canada': ['canada', 'toronto'],
     'tunisia': ['tunisia', 'tunis'], 'egypt': ['egypt', 'cairo'],
+    'brazil':['brazil','brasil'], 'mexico':['mexico'], 'argentina':['argentina'],
+    'chile':['chile'], 'colombia':['colombia'], 'peru':['peru'],
+    'australia':['australia'], 'new zealand':['new zealand'], 'india':['india'],
+    'japan':['japan'], 'singapore':['singapore'], 'china':['china'],
+    'south africa':['south africa'], 'nigeria':['nigeria'], 'kenya':['kenya'],
 }
-EMEA = set(COUNTRIES) - {'united states', 'canada'}
-EUROPE = EMEA - {'tunisia', 'egypt'}
+EUROPE = {'germany','austria','netherlands','belgium','ireland','sweden','denmark','finland',
+          'norway','france','poland','spain','portugal','italy','united kingdom'}
+EMEA = EUROPE | {'tunisia','egypt','south africa','nigeria','kenya'}
+REGIONS = {
+    'north america':({'united states','canada','mexico'},['north america','north american']),
+    'latam':({'mexico','brazil','argentina','chile','colombia','peru'},['latam','latin america','south america']),
+    'apac':({'australia','new zealand','india','japan','singapore','china'},['apac','asia pacific']),
+    'emea':(EMEA,['emea']), 'europe':(EUROPE,['europe','european']),
+    'eu':(EUROPE-{'united kingdom','norway'},['eu','european union']),
+}
 VISA_YES = ['visa sponsorship', 'visa support', 'we sponsor work visas', 'we sponsor visas']
 VISA_NO = ['no visa sponsorship', 'no visa support', 'unable to offer visa sponsorship',
            'not able to offer visa sponsorship', 'cannot sponsor', 'do not sponsor',
@@ -74,42 +87,50 @@ def assess(job, preferences, path):
         return result
 
     current = (preferences.get('current_country') or '').lower()
-    if re.search(r'hybrid (?:work|role|position)|office attendance required|\d+ days? (?:per week|a week|/week).{0,30}(?:office|on.?site)', description, re.I):
+    workplace = (job.get('workplace_type') or '').lower()
+    attendance=re.search(r'hybrid (?:work|role|position)|office attendance required|\d+ days? (?:per week|a week|/week).{0,30}(?:office|on.?site)|in[- ]person (?:role|work|position)|(?:role|position|work) (?:is |requires? )?(?:on[- ]site|in[- ]person)|on[- ]site in', description, re.I)
+    if workplace in {'onsite','on-site','hybrid'} or attendance:
         result['status'] = 'excluded'
         result['reasons'].append('The role requires hybrid or office attendance, not fully remote work.')
+        result['evidence'].append({'field':'work_arrangement','quote':attendance.group(0) if attendance else workplace,'meaning':'office_required'})
         return result
-    # Country restrictions in the ad take precedence over a bare "Remote" label.
-    restrictions = []
-    for sentence in re.split(r'[\n.!?]', description):
-        if re.search(r'only|must be based|residen|based in|located in|hiring in|remote (?:from|in)', sentence, re.I):
-            found = countries(sentence)
-            if found:
-                restrictions.append(found)
-                result['evidence'].append({'field':'remote_countries','quote':sentence.strip(), 'meaning':'restriction'})
-    loc_countries = countries(location)
-    if loc_countries:
-        restrictions.append(loc_countries)
-        result['evidence'].append({'field':'remote_countries','quote':location,'meaning':'restriction'})
-    if any(current not in group for group in restrictions):
+    restrictions=[]
+    unknown=[]
+    def add_scope(scope, is_location=False):
+        members=countries(scope)
+        regions=[(name,group) for name,(group,aliases) in REGIONS.items() if any(contains(scope,a) for a in aliases)]
+        if members:
+            restrictions.append(members)
+        elif regions:
+            # EU is narrower than Europe; select the narrowest named region.
+            restrictions.append(min((group for _,group in regions),key=len))
+        elif is_location:
+            remainder=re.sub(r'\b(?:remote|home based|home-based|global|worldwide|anywhere|distributed)\b','',scope,flags=re.I)
+            if re.search(r'[a-z]',remainder,re.I):
+                unknown.append(scope)
+        else:
+            unknown.append(scope)
+        if members or regions or scope in unknown:
+            result['evidence'].append({'field':'remote_countries','quote':scope.strip(),'meaning':'restriction' if members or regions else 'unrecognized_restriction'})
+    add_scope(location,True)
+    for sentence in re.split(r'(?<=[.!?])\s+|\n+',description):
+        if re.search(r'must be based|residen|(?:candidates?|applicants?) .{0,25}(?:based|located)|hiring (?:only |in |from )|remote (?:from|in)|(?:europe|eu|america|apac|latam)[- ]only|only .{0,20}(?:europe|america|apac|latam)|based in|located in',sentence,re.I):
+            add_scope(sentence)
+    # A supported restriction can exclude; unknown geography cannot establish
+    # eligibility even when a company description says "worldwide".
+    if current in COUNTRIES and any(current not in group for group in restrictions):
         result['status'] = 'excluded'
         result['reasons'].append('Remote hiring is restricted to other countries.')
-    elif restrictions and current and 'remote' in text.lower():
+    elif unknown or (restrictions and current not in COUNTRIES):
+        result['reasons'].append('Verify unrecognized hiring geography before applying.')
+    elif restrictions and current and ('remote' in text.lower() or job.get('is_remote')):
         result['status'] = 'eligible'
-    elif re.search(r'(?:europe|eu)\s*(?:only|[- ]based)|only.{0,20}(?:europe|eu)\b', text, re.I) and current not in EUROPE:
-        result['status'] = 'excluded'
-        result['reasons'].append('Explicit Europe-only remote restriction excludes the current country.')
     elif re.search(r'work from anywhere|anywhere in the world|worldwide|remote[, -]+global', text, re.I):
         result['status'] = 'eligible'
         result['evidence'].append({'field':'remote_countries','quote':location or description, 'meaning':'worldwide'})
-    elif contains(text, 'EMEA') and current in EMEA:
-        result['status'] = 'eligible'
-        result['evidence'].append({'field':'remote_countries','quote':location, 'meaning':'EMEA'})
-    elif contains(text, 'Europe') and current not in EUROPE:
-        result['status'] = 'excluded'
-        result['reasons'].append('Europe-only remote work does not include the current country.')
     else:
         result['reasons'].append('Remote does not establish permission to work from the current country.')
-    if not re.search(r'remote|anywhere|worldwide', text, re.I):
+    if result['status'] != 'excluded' and not (re.search(r'remote|anywhere|worldwide', text, re.I) or job.get('is_remote')):
         result['status'] = 'needs_verification'
         result['reasons'].append('Fully remote work is not explicit.')
     return result
