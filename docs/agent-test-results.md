@@ -62,3 +62,14 @@ Baseline: `d870e0eead74e3d232e54caab1fa1561a1332fe2`.
   real profiles require explicit confirmation under the new digest-based gate.
 - No merge, publication, email, real-profile search or application submission was
   performed during implementation testing.
+
+## Follow-up: confirmed remote sponsorship wording
+
+Removed the blanket remote-resume `visa` keyword rejection. Five added regression
+tests reproduced the pre-fix failures and passed after the change: confirmed
+sponsorship statements, altered work-right rejection, a confirmed employer named
+Visa, faithful revision/recheck, and the pipeline reaching the renderer. The
+pipeline test uses a mocked rendering boundary and also verifies Canada-only
+remote exclusion. No new live search or PDF conversion was needed for this
+validation-only change. The complete local suite now passes 62 tests;
+`git diff --check` passes. Submission and eligibility safeguards are unchanged.

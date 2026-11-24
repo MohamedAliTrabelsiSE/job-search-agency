@@ -1,8 +1,8 @@
 """Mechanical half of the ATS specialist.
 
 A pass here means the draft did not invent an employer, a school, or a
-forbidden tool, and the visa line matches the path. Wording quality is the
-prompt in prompts/ats.md, not this file.
+forbidden tool, and work-right statements match supplied preferences. Wording
+quality is the prompt in prompts/ats.md, not this file.
 """
 
 import json
@@ -98,8 +98,6 @@ def findings(cv, facts, card, preferences=None):
     for ed in cv.get("education") or []:
         if (ed.get("degree") or "").lower() not in known_degrees:
             found.append({"severity": "factual", "quote": ed.get("degree") or "", "action": "delete the degree; it is not on the general resume"})
-    if card.get("path") == "worldwide" and re.search(r"\bvisa\b", text):
-        found.append({"severity": "factual", "quote": "visa", "action": "remove the visa line; this role is remote, not a move"})
     return found
 
 

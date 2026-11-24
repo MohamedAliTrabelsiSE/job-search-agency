@@ -122,6 +122,43 @@ class MatchingTest(unittest.TestCase):
 
 
 class FactsTest(unittest.TestCase):
+    def test_confirmed_remote_sponsorship_statements_pass(self):
+        card = {'path':'worldwide','title':'Backend Engineer','description':'TypeScript APIs'}
+        for statement in ('Working remotely from Egypt.', 'I do not need visa sponsorship.', 'I need visa sponsorship.'):
+            with self.subTest(statement=statement):
+                prefs = copy.deepcopy(PREFS)
+                prefs['work_right']['remote'] = statement
+                cv = draft(FACTS, prefs, card)
+                self.assertEqual(findings(cv, FACTS, card, prefs), [])
+
+    def test_altered_remote_statement_fails_even_with_a_matching_overview(self):
+        card = {'path':'worldwide','title':'Backend Engineer'}
+        prefs = copy.deepcopy(PREFS)
+        prefs['work_right']['remote'] = 'I do not need visa sponsorship.'
+        altered = copy.deepcopy(prefs)
+        altered['work_right']['remote'] = 'I need visa sponsorship.'
+        cv = draft(FACTS, altered, card)
+        self.assertIn('work_right', [issue['quote'] for issue in findings(cv, FACTS, card, prefs)])
+
+    def test_confirmed_visa_employer_is_preserved_on_remote_resume(self):
+        facts = copy.deepcopy(FACTS)
+        facts['experience'][0]['company'] = 'Visa Example Payments Studio'
+        card = {'path':'worldwide','title':'Backend Engineer'}
+        self.assertEqual(findings(draft(facts, PREFS, card), facts, card, PREFS), [])
+
+    def test_revision_keeps_confirmed_remote_statement_and_can_pass_recheck(self):
+        from ats_check import revise
+        card = {'path':'worldwide','title':'Backend Engineer'}
+        prefs = copy.deepcopy(PREFS)
+        prefs['work_right']['remote'] = 'I do not need visa sponsorship.'
+        cv = draft(FACTS, prefs, card)
+        cv['experience'][0]['bullets'].append('Improved response times by 999%.')
+        issues = findings(cv, FACTS, card, prefs)
+        self.assertTrue(issues)
+        revised = revise(cv, issues, FACTS, prefs, card)
+        self.assertEqual(revised['work_right'], prefs['work_right']['remote'])
+        self.assertEqual(findings(revised, FACTS, card, prefs), [])
+
     def test_two_roles_at_the_same_employer_remain_distinct(self):
         facts = copy.deepcopy(FACTS)
         other = copy.deepcopy(facts['experience'][0]); other['title'] = 'Software Developer'; other['dates'] = '2023 - 2024'
@@ -247,6 +284,24 @@ class DiscoveryTest(unittest.TestCase):
 
 
 class PipelineTest(unittest.TestCase):
+    def test_confirmed_remote_visa_statement_reaches_renderer(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder); self.setup_profile(root)
+            prefs = copy.deepcopy(PREFS)
+            prefs['work_right']['remote'] = 'I do not need visa sponsorship.'
+            (root/'data/preferences.json').write_text(json.dumps(prefs), encoding='utf-8')
+            confirm(root, FACTS['name'])
+            reports = load_json(ROOT/'tests/fixtures/scout-reports.json')['reports']
+            with patch('morning.render_files') as renderer:
+                result = run_workflow(root, reports, render=True, read_mail=False)
+            self.assertEqual(result['errors'], [])
+            self.assertEqual(renderer.call_count, 2)
+            for call in renderer.call_args_list:
+                self.assertEqual(call.args[0]['work_right'], prefs['work_right']['remote'])
+            shortlist = load_json(root/'data/runs'/result['run_id']/'shortlist.json')
+            self.assertTrue(any(card['company'] == 'example-canada' and card['decision'] == 'excluded'
+                                for card in shortlist['skipped']))
+
     def test_document_keeps_clickable_contact_and_project_links(self):
         from docx import Document
         with tempfile.TemporaryDirectory() as folder:

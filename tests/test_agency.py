@@ -78,16 +78,16 @@ class AgencyTest(unittest.TestCase):
         self.assertEqual([card["company"] for card in cards], ["Kept"])
         self.assertEqual(cards[0]["path"], "relocation")
 
-    def test_ats_rejects_invented_tool_and_a_visa_on_remote(self):
+    def test_ats_rejects_invented_tool_and_unconfirmed_overview(self):
         card = {"path": "worldwide", "title": "Backend Engineer", "excerpt": "TypeScript APIs"}
         cv = draft(FACTS, PREFS, card)
         cv["experience"][0]["bullets"].append("Operated the platform on Kubernetes.")
         cv["summary"] = "Requires visa sponsorship."
-        issues = findings(cv, FACTS, card)
+        issues = findings(cv, FACTS, card, PREFS)
         self.assertTrue(any(item["quote"] == "Kubernetes" for item in issues))
-        self.assertTrue(any(item["quote"] == "visa" for item in issues))
+        self.assertTrue(any(item["quote"] == "overview provenance" for item in issues))
         revised = revise(cv, issues, FACTS, PREFS, card)
-        self.assertEqual(findings(revised, FACTS, card), [])
+        self.assertEqual(findings(revised, FACTS, card, PREFS), [])
 
     def test_relocation_draft_keeps_the_visa_line(self):
         card = {"path": "relocation", "title": "Backend Engineer", "excerpt": "TypeScript"}
