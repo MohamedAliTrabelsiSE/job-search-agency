@@ -603,7 +603,7 @@ def _soffice_command(soffice, docx_path, profile):
     return [
         soffice,
         "--headless",
-        f"-env:UserInstallation={Path(profile).as_uri()}",
+        f"-env:UserInstallation={Path(profile).resolve().as_uri()}",
         "--convert-to",
         "pdf",
         "--outdir",
