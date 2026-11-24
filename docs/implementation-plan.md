@@ -49,3 +49,24 @@ Keep a local Python CLI, JSON artifacts and SQLite operational history; no hoste
 service or dashboard. Deterministic matching is explainable, not a semantic model.
 Country and requirement extraction is conservative and exposes uncertainty.
 Source availability is time-dependent; source count is never worldwide coverage.
+
+## Manual-audit corrections (2026-11-25)
+
+Implement and test in five local commits before user acceptance:
+
+1. Preserve original/structured ads, broaden plausible titles, use seniority word
+   boundaries, and defer location decisions until full-ad assessment.
+2. Give explicit country/region/office restrictions priority over worldwide
+   company marketing. Unsupported geography remains uncertain.
+3. Preserve required/preferred/alternative sections and essential expertise;
+   unknown mandatory platforms and ambiguous cardinality require review.
+4. Bound experience stretch to one year and two-thirds of required duration by
+   default; penalize shortfalls and explain exclusions. Optional years are not minima.
+5. Retain older/undated listed jobs by default, label freshness separately from
+   observed availability, and import/verify new employers from public search-tool
+   results. Report seed-only versus expanded search separately from feed health.
+
+Replay the saved investigation without treating the number of recovered postings
+as verified matches. Run fictional regressions and isolated live expansion checks;
+preserve private profiles and keep submission disabled. Manual acceptance remains
+the final gate before merging or publishing.

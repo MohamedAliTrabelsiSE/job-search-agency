@@ -106,6 +106,41 @@ local state. Do not record a real submission without observed employer evidence.
 
 ## Acceptance record
 
+### Suitability and coverage corrections
+
+Run the focused regressions as well as the full suite:
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 -m unittest discover -s tests -p test_assessment.py
+.\.venv\Scripts\python.exe -X utf8 -m unittest discover -s tests -p test_employers.py
+```
+
+Check these expected behaviors in your next real-profile run:
+
+- Two years versus 2/3/5/8/20 years yields meets/stretch/excluded/excluded/excluded.
+  Stretch has an experience penalty and an explanation, not the same score.
+- Nice-to-have Go is preferred. Go-or-Python is one choice, not both mandatory.
+  Multiple-choice lists and explicit parentheses retain other required skills.
+- Essential Linux/networking/cloud gaps do not become recommendations from Python
+  overlap. Unknown mandatory platforms/cardinality go to verification.
+- Brazil-only, North America-only and in-person roles do not pass remote eligibility
+  for Tunisia. Unsupported locations stay uncertain despite worldwide marketing.
+- Web Engineer, Node.js Developer and Internal Tools reach assessment; internships
+  retain their explicit seniority classification.
+- Older and undated listed ads remain visible, with freshness/availability labels.
+  To test strict freshness, set `freshness_mode: recent_only` in the relevant rules;
+  unknown dates stay visible and known older dates are filtered. Restore `prefer`.
+
+For expanded coverage, have the assistant execute `employers.py queries` using its
+public search tool, save the README result schema privately, then import with
+`employers.py import --results PATH`. Use `--root tmp/my-demo` for a fictional profile.
+Inspect private `data/employer-discovery.json` and the run's `market_discovery`:
+new boards must be verified, URLs deduplicated and failed/unsupported hosts shown.
+Without search results, the report must say seed_only. Adding seed tokens alone
+is not employer discovery. Expanded results still do not cover the entire market.
+
+### Record your decision
+
 Save your results in `tmp/user-acceptance.md`: date, branch/commit, commands,
 pass/fail for each section, PDF observations and any surprises. Keep real candidate
 data out of issues, screenshots shared publicly, and commits.

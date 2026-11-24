@@ -65,7 +65,8 @@ def rank_cards(cards, facts, policy=None):
         else:
             skipped.append(scored)
     order = {'recommended':0, 'stretch':1, 'needs_verification':2}
-    kept.sort(key=lambda card: (order[card['decision']], -card["score"], _date_key(card.get("published")), (card.get("company") or "").lower()))
+    fresh_order={'recent':0,'older':1,'unknown':2}
+    kept.sort(key=lambda card: (order[card['decision']], -card["score"], fresh_order.get(card.get('freshness',{}).get('status'),1), _date_key(card.get("published")), (card.get("company") or "").lower()))
     return kept, skipped
 
 

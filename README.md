@@ -53,7 +53,7 @@ then app password). She never sends. New search artifacts live in
 contains source health, pool, shortlist, reviews, summary and the file handoff.
 Resumes live in `outbox/<run-id>/<company-role-job-id>/`.
 
-The search covers configured public Ashby, Lever and Greenhouse boards. It reports
+The search covers seed and runtime-discovered public Ashby, Lever and Greenhouse boards. It reports
 healthy/failed boards and description-fetch failures. **No matches is not proof
 that no jobs exist.** An all-source failure cannot replace the last successful run.
 
@@ -64,10 +64,19 @@ deterministic overlap heuristics, not probabilities or employer assessments.
 
 | Decision | Result |
 | --- | --- |
-| recommended | Technical overlap, no extracted required gaps, eligible location |
-| stretch | Relevant skills but extracted requirements are missing |
-| needs_verification | Eligibility or experience evidence is unresolved; no resume yet |
-| excluded | Explicit incompatibility or no technical skill overlap |
+| recommended | Understood requirements, supported essential expertise, no extracted gaps, eligible location |
+| stretch | Minor skill or bounded experience gap; essential expertise is supported |
+| needs_verification | Eligibility, requirements or experience evidence is unresolved; no resume yet |
+| excluded | Explicit incompatibility, substantial experience gap, missing essential expertise, or no technical overlap |
+
+Required, preferred and one-of alternatives retain section evidence. Preferred
+skills never become mandatory just because they say "experience with". A two-year
+candidate meets a two-year minimum, may stretch to three, and is excluded for
+five/eight/twenty years. The default experience stretch permits at most one year
+and requires at least two-thirds of the stated duration; customize
+`matching_policy.max_experience_gap` and `matching_policy.min_experience_ratio`
+in confirmed preferences. Scores include experience penalties. Technology overlap
+alone cannot establish a recommendation when requirements are not understood.
 
 All distinct job URLs stay available; multiple openings at one company can survive.
 Legacy `roles.json` company exclusions remain supported. New application history
@@ -102,6 +111,32 @@ requests share one eight-request limit. Fetches retry transient failures only.
 Regions currently cover Germany/Austria, Netherlands/Belgium/Ireland and the
 Nordics; selecting another country does not automatically add sources for it.
 
+### Discover employers beyond the seed list
+
+The coding assistant uses its public web-search tool, then imports the result
+URLs. The CLI does not scrape search engines or pretend to have a search service.
+
+```powershell
+python src/employers.py queries
+# Assistant executes those searches and saves results privately.
+python src/employers.py import --results tmp/public-search-results.json
+python src/morning.py --skip-inbox
+```
+
+Input shape: `{"queries":["query"],"results":[{"url":"https://jobs.ashbyhq.com/company/job-id","query":"query","scouts":["worldwide"]}]}`.
+Use `dach`, `benelux-ie` or `nordics` for relocation search results as appropriate.
+Supported official ATS URLs are parsed, deduplicated and verified against their
+public feeds. Imported boards live in private `data/employer-discovery.json`,
+expire after seven days, and are merged at runtime without editing the seed list.
+Each run reports `market_discovery` separately from board health. Without search
+evidence, it explicitly reports **seed_only** coverage. Even expanded search is
+not exhaustive. Unsupported/custom career hosts are reported for review.
+
+Posting age is separate from availability: each fetched ad is `observed_listed`,
+not guaranteed accepting applications. Dates are recent/older/unknown. Default
+`freshness_mode: prefer` retains older and undated listed jobs; `recent_only`
+filters known older dates using `cutoff_days` while retaining unknown dates visibly.
+
 ## Application preparation and history
 
 `src/applications.py --help` exposes local preflight and outcome recording. It
@@ -128,8 +163,9 @@ under ignored `tmp/` and publish only after reviewing the diff for private data.
 Country aliases, required-skill extraction and experience parsing are conservative
 heuristics, not legal advice or semantic understanding. Unrecognized requirements
 can be missed. Read the full ad and verify ambiguous eligibility with the employer.
-The 21-day discovery cutoff uses the source timestamp; Greenhouse timestamps mean
-updated, not necessarily first published. Mail classification and legacy company
+The optional freshness filter uses source timestamps; Greenhouse timestamps mean
+updated, not necessarily first published. Unknown geographic restrictions require
+verification rather than permission. Mail classification and legacy company
 exclusions can be coarse. Resume checks deliberately block unsupported rewrites.
 
 MIT licence. Feedback: [issues](https://github.com/MohamedAliTrabelsiSE/job-search-agency/issues)

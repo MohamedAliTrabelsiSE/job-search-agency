@@ -24,6 +24,11 @@ Maya revises once, then Marco rechecks.
 
 ## Search and decisions
 
+Before a broad live search, follow `skills/job-research/SKILL.md` to discover and
+verify employers beyond the seed list using public search tools. If search tools
+are unavailable, report seed-only scope explicitly. Runtime discovery evidence
+and source health are separate; neither proves worldwide market coverage.
+
 Run `src/morning.py` after confirmation. Use `--skip-inbox` when mail is unwanted;
 otherwise Ida runs only when credentials exist. She reads and records, never sends.
 The scouts selected by preferences run in threads sharing eight concurrent public
@@ -39,6 +44,11 @@ application history, and preserves the complete ad. Theo uses technical aliases,
 required skills, experience evidence and eligibility. Keep distinct openings at
 the same company. Decisions are recommended, stretch, needs_verification, excluded.
 Common words are not evidence of fit. See `prompts/rank.md`.
+Preserve ad structure and required/preferred/one-of context. Explicit essential
+expertise gaps and substantial experience shortfalls exclude a job. Unknown
+requirements require verification. Default experience stretch is at most one year
+with at least two-thirds of the required duration. Older/undated listed jobs stay
+visible unless a confirmed freshness policy filters known older dates.
 
 Visa sponsorship, relocation assistance and allowed work countries are separate
 fields with evidence. Unknown eligibility stays visible; it gets no application

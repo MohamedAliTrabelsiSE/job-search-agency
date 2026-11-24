@@ -2,6 +2,7 @@
 # Match tokens are case-insensitive substrings.
 
 cutoff_days: 21
+freshness_mode: prefer
 
 location_tokens:
   - germany

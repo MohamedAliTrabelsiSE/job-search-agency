@@ -1,10 +1,10 @@
 """Transparent technical matching. A score is evidence overlap, not a probability."""
 import json
 import re
-from requirements import extract, expertise_in
+from requirements import extract, expertise_in, EXPERTISE
 
 SKILLS = {
-    'TypeScript': ['typescript'], 'JavaScript': ['javascript'],
+    'TypeScript': ['typescript','ts'], 'JavaScript': ['javascript','js'],
     'Node.js': ['node.js', 'nodejs', 'node js'], 'NestJS': ['nestjs', 'nest.js'],
     'React': ['react', 'react.js', 'reactjs'], 'Next.js': ['next.js', 'nextjs'],
     'React Native': ['react native'], 'Python': ['python'], 'Java': ['java'],
@@ -18,6 +18,8 @@ SKILLS = {
     'WebSocket': ['websocket', 'websockets'], 'Supabase': ['supabase'],
     'LLM integration': ['llm', 'large language models', 'openai'],
     'Angular': ['angular'], 'Swift': ['swift'], 'SQL': ['sql'],
+    'GraphQL':['graphql'], 'Redis':['redis'], 'Flutter':['flutter'], 'Svelte':['svelte'],
+    'C++':['c++'], 'C#':['c#'], '.NET':['.net','dotnet'], 'Bash':['bash'],
 }
 
 
@@ -25,7 +27,7 @@ def skills_in(text):
     original = text
     text = text.lower()
     found = {name for name, aliases in SKILLS.items() if name != 'Go'
-             and any(re.search(r'(?<![\w])' + re.escape(alias) + r'(?![\w])', text) for alias in aliases)}
+             and any(re.search((r'(?<![\w.])' if alias in {'js','ts'} else r'(?<![\w])') + re.escape(alias) + r'(?![\w])', text) for alias in aliases)}
     if re.search(r'\b(?:Go|[Gg]olang)\b', original):
         found.add('Go')
     return found
@@ -44,6 +46,7 @@ def compare(card, facts, policy=None):
     missing_expertise=sorted((requirements['essential_expertise']-expertise) | (requirements['essential_skills']-known))
     alternative_results=[dict(group,satisfied=bool(set(group['options']) & (known|expertise))) for group in requirements['alternatives']]
     missing_alternatives=[group for group in alternative_results if not group['satisfied']]
+    essential_alternative_gaps=[group for group in missing_alternatives if set(group['options']) & set(EXPERTISE)]
     shared = sorted(target & known)
     gaps = sorted(required - known)
     years=re.findall(r'(\d+)(?:\s*[-–]\s*\d+)?\s*\+?\s*years?\s+(?:of\s+)?(?:(?:relevant|professional|industry|software|backend|engineering|development)\s+)*experience', requirements['required_text'], re.I)
@@ -58,9 +61,17 @@ def compare(card, facts, policy=None):
     eligibility = card.get('eligibility') or {}
     status = eligibility.get('status', 'eligible')
     reasons=[]
-    decision = 'excluded' if status == 'excluded' or not shared or missing_expertise else 'needs_verification' if status == 'needs_verification' or requirements['unresolved'] else 'stretch' if gaps or missing_alternatives else 'recommended'
+    if status in ('needs_verification','excluded'):
+        reasons.extend(eligibility.get('reasons') or [])
+    decision = 'excluded' if status == 'excluded' or not shared or missing_expertise or essential_alternative_gaps else 'needs_verification' if status == 'needs_verification' or requirements['unresolved'] else 'stretch' if gaps or missing_alternatives else 'recommended'
+    recognized_requirements=bool(required or requirements['essential_expertise'] or alternative_results or years_required is not None)
+    if status != 'excluded' and not missing_expertise and not essential_alternative_gaps and (not text.strip() or (shared and not recognized_requirements)):
+        decision='needs_verification'
+        reasons.append('Full job requirements could not be established; shared technology alone is insufficient.')
     if missing_expertise:
         reasons.append('Missing essential expertise: '+', '.join(missing_expertise))
+    if essential_alternative_gaps:
+        reasons.append('No confirmed expertise satisfies an essential alternative group.')
     if requirements['unresolved']:
         reasons.append('Mandatory expertise requires interpretation and evidence review.')
     experience_gap=0

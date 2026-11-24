@@ -73,3 +73,28 @@ pipeline test uses a mocked rendering boundary and also verifies Canada-only
 remote exclusion. No new live search or PDF conversion was needed for this
 validation-only change. The complete local suite now passes 62 tests;
 `git diff --check` passes. Submission and eligibility safeguards are unchanged.
+
+## Follow-up: suitability and coverage audit (2026-11-25)
+
+- 86 local unittest cases pass. New regressions cover experience 2/3/5/8/20,
+  core expertise, preferred and alternative requirements, heading variations,
+  unknown mandatory platforms, cardinality uncertainty, parenthetical preferences,
+  Brazil/North America/in-person restrictions, title aliases, Internal Tools,
+  EMEA full-ad evidence, freshness and employer discovery.
+- Replayed the saved 1,683-posting investigation. The revised early gates retain
+  133 for full assessment, versus 26 in the November 24 snapshot. This is recall,
+  not 133 suitable jobs. The saved web role now reaches assessment and is excluded
+  for missing Linux evidence. Wynd Labs remains visible with optional Go correctly
+  preferred and remote eligibility unresolved.
+- Public search found two employers outside the 23 seeds. Import verified their
+  official public ATS feeds; an isolated fictional live search reached 25 healthy
+  boards. Full captured ads were replayed after parser refinements without further
+  network requests. No real mailbox or application was touched.
+- Employer expansion is search-tool-assisted: standalone CLI runs without imported
+  results explicitly report seed_only. No search-engine scraper or false claim of
+  exhaustive worldwide coverage was added. Cached discovery expires after seven days.
+- Unknown mandatory expertise or complex cardinality requires verification. These
+  remain explainable heuristics, not complete natural-language understanding.
+- The fictional renderer demo still produces two source-backed application PDFs;
+  no template/layout change is part of this correction. Manual user acceptance
+  and remote Windows/Linux CI remain pending. No merge, push or publication occurred.

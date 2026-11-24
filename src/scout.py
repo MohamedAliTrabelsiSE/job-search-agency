@@ -8,6 +8,7 @@ from load_config import load_json, load_simple_yaml
 from names import SCOUTS
 from places import scouts_for
 from state import write_json
+from employers import load_discovery,merge_sources
 
 ROOT = Path(__file__).resolve().parents[1]
 RULES = {name: ROOT/'config'/('rules.worldwide.yaml' if name == 'worldwide' else 'rules.relocation.yaml')
@@ -19,15 +20,19 @@ def scout_plan(preferences):
             for name in scouts_for(preferences) if (ROOT/'config/sources'/f'{name}.yaml').exists()]
 
 
-def run_scouts(preferences, out_dir, roles_path=None):
+def run_scouts(preferences, out_dir, roles_path=None, discovery_path=None):
     plan = scout_plan(preferences)
     if not plan:
         raise ValueError('No scout covers these preferences. Add supported sources before searching.')
     skip = skipped_companies(roles_path) if roles_path else set()
+    discovery=load_discovery(discovery_path or ROOT/'data/employer-discovery.json')
     def run_one(item):
         name, sources, rules = item
         print(f'{SCOUTS[name]} searching {name}', flush=True)
-        payload = discover(load_simple_yaml(sources), load_simple_yaml(rules), preferences, skip)
+        seeds=load_simple_yaml(sources)
+        expanded=merge_sources(seeds,discovery['boards'],name)
+        payload = discover(expanded, load_simple_yaml(rules), preferences, skip)
+        payload['market_discovery']=dict(discovery['market_discovery'],added_boards=sum(len(v) for v in expanded.values())-sum(len(v) for v in seeds.values()))
         payload['scout'] = name
         write_json(Path(out_dir)/f'scout-{name}.json', payload)
         print(f"{SCOUTS[name]} coverage {payload['coverage']} candidates {payload['count']}", flush=True)

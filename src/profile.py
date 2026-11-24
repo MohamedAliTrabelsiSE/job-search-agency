@@ -107,7 +107,7 @@ def main():
         archive = data / 'archives' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%f')
         archive.mkdir(parents=True)
         # Move only explicitly owned private state; no recursive deletion.
-        for name in ('cv_facts.json','preferences.json','profile-confirmation.json','roles.json','agency.sqlite3','latest-run.json','inbox.json'):
+        for name in ('cv_facts.json','preferences.json','profile-confirmation.json','roles.json','agency.sqlite3','latest-run.json','inbox.json','employer-discovery.json'):
             p = data / name
             if p.exists():
                 p.rename(archive / name)

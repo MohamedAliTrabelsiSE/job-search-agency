@@ -71,6 +71,16 @@ def within_cutoff(value, rules, today=None):
     return found >= today - datetime.timedelta(days=int(rules.get("cutoff_days") or 0))
 
 
+def freshness(value,rules,today=None):
+    date=parse_date(value)
+    today=today or datetime.date.today()
+    if date is None or date>today:
+        return {'status':'unknown','age_days':None,'source_date':value or None}
+    age=(today-date).days
+    return {'status':'recent' if age<=int(rules.get('cutoff_days',21)) else 'older',
+            'age_days':age,'source_date':value}
+
+
 def classify_sponsorship(text, rules):
     """Return offered, blocked, conflict, or unknown, plus the phrases found."""
     low = plain(text).lower()

@@ -45,7 +45,7 @@ def run_workflow(root=ROOT, reports=None, render=True, read_mail=True):
         else:
             write_json(run_dir/'inbox.json', {'skipped':'disabled for this run','messages':[]})
         if reports is None:
-            reports = run_scouts(prefs, run_dir, root/'data/roles.json')
+            reports = run_scouts(prefs, run_dir, root/'data/roles.json',root/'data/employer-discovery.json')
         reports = [report for report in reports if report.get('scout','worldwide') in scouts_for(prefs)]
         paths = []
         for report in reports:
@@ -63,6 +63,7 @@ def run_workflow(root=ROOT, reports=None, render=True, read_mail=True):
         health = [source for report in reports for source in report.get('sources', [])]
         store.record_sources(health)
         summary['coverage'] = coverage(health)
+        summary['market_discovery']=[r.get('market_discovery',{'mode':'fixture','exhaustive':False}) for r in reports]
         summary['coverage']['limited'] |= any(report.get('errors') or report.get('greenhouse_descriptions_skipped') for report in reports)
         write_json(run_dir/'source-health.json', {'coverage':summary['coverage'],'sources':health})
         if not summary['coverage']['healthy']:
@@ -107,6 +108,7 @@ def run_workflow(root=ROOT, reports=None, render=True, read_mail=True):
                      'first_pass_findings':first, 'revision_count':int(bool(first)),
                      'checks':{'facts':'blocked' if remaining else 'checked', 'pdf':'not_checked'},
                      'job_fit_gaps':card['missing_required_skills'], 'eligibility':card.get('eligibility')}
+            check['job_fit']={key:card.get(key) for key in ('decision','decision_reasons','one_of_requirements','missing_essential_expertise','experience_gap_years','unresolved_requirements')}
             reviews.append({'card':card,'first':first,'remaining':remaining,'folder':str(folder)})
             if not remaining:
                 try:

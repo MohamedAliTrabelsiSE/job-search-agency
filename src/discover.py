@@ -33,6 +33,7 @@ from screen import (
     seniority_blocked,
     title_ok,
     within_cutoff,
+    freshness,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -63,6 +64,7 @@ def board_jobs(platform, slug):
                 "published": (job.get("publishedAt") or "")[:10],
                 "description": job.get("descriptionPlain") or "",
                 "is_remote": job.get('isRemote'),
+                "workplace_type": job.get('workplaceType') or '',
                 "structured_locations": [job.get('location')]+extra,
             })
         return jobs
@@ -81,6 +83,7 @@ def board_jobs(platform, slug):
                 "url": job.get("hostedUrl") or "",
                 "published": published.isoformat() if published else "",
                 "is_remote": job.get('workplaceType') == 'remote',
+                "workplace_type": job.get('workplaceType') or '',
                 "description": (job.get("descriptionPlain") or job.get("description") or "") + '\n' + '\n'.join(
                     str(section.get('text') or '') + '\n' + str(section.get('content') or '')
                     for section in job.get('lists') or []) + '\n' + (job.get('additionalPlain') or job.get('additional') or ''),
@@ -132,7 +135,9 @@ def keep(job, rules, today=None):
         return False
     if seniority_blocked(job["title"], rules):
         return False
-    if not within_cutoff(job["published"], rules, today=today):
+    if job.get('is_listed') is False:
+        return False
+    if rules.get('freshness_mode','prefer')=='recent_only' and freshness(job.get('published'),rules,today)['status']=='older':
         return False
     return True
 
@@ -185,6 +190,8 @@ def discover(sources, rules, preferences, skip=(), content_cap=None, board_reade
         path = 'worldwide' if rules.get('mode') == 'worldwide' else 'relocation'
         card = dict(job, description_raw=raw, description=text, excerpt=plain(text)[:900], path=path,
                     retrieved_at=datetime.now(timezone.utc).isoformat())
+        card['freshness']=freshness(job.get('published'),rules)
+        card['availability']={'status':'observed_listed','observed_at':card['retrieved_at']}
         card['eligibility'] = assess(card, preferences, path)
         card['sponsorship'] = {'eligible':'offered','excluded':'blocked'}.get(card['eligibility']['status'],'unknown')
         candidates.append(card)

@@ -25,7 +25,8 @@ EUROPE = {'germany','austria','netherlands','belgium','ireland','sweden','denmar
 EMEA = EUROPE | {'tunisia','egypt','south africa','nigeria','kenya'}
 REGIONS = {
     'north america':({'united states','canada','mexico'},['north america','north american']),
-    'latam':({'mexico','brazil','argentina','chile','colombia','peru'},['latam','latin america','south america']),
+    'latam':({'mexico','brazil','argentina','chile','colombia','peru'},['latam','latin america']),
+    'south america':({'brazil','argentina','chile','colombia','peru'},['south america']),
     'apac':({'australia','new zealand','india','japan','singapore','china'},['apac','asia pacific']),
     'emea':(EMEA,['emea']), 'europe':(EUROPE,['europe','european']),
     'eu':(EUROPE-{'united kingdom','norway'},['eu','european union']),
@@ -114,7 +115,7 @@ def assess(job, preferences, path):
             result['evidence'].append({'field':'remote_countries','quote':scope.strip(),'meaning':'restriction' if members or regions else 'unrecognized_restriction'})
     add_scope(location,True)
     for sentence in re.split(r'(?<=[.!?])\s+|\n+',description):
-        if re.search(r'must be based|residen|(?:candidates?|applicants?) .{0,25}(?:based|located)|hiring (?:only |in |from )|remote (?:from|in)|(?:europe|eu|america|apac|latam)[- ]only|only .{0,20}(?:europe|america|apac|latam)|based in|located in',sentence,re.I):
+        if re.search(r'must be based|residen|(?:candidates?|applicants?) .{0,25}(?:based|located)|hiring (?:only |in |from )|remote (?:from|in)|(?:europe|eu|america|apac|latam)[- ]only|only .{0,20}(?:europe|america|apac|latam)|based in|located in|(?:eligible|authorized|right) to work in|must (?:live|reside)|(?:role|position|hiring).{0,35}\bonly\b',sentence,re.I):
             add_scope(sentence)
     # A supported restriction can exclude; unknown geography cannot establish
     # eligibility even when a company description says "worldwide".
