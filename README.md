@@ -67,7 +67,7 @@ You never talk to the workers. The only reply inside the agency is Marco's list 
 
 If `data/cv_facts.json` or `data/preferences.json` is missing, Sami stops. No scout runs. It asks, in this order:
 
-1. **Your general resume.** A PDF, a text file, or a paste. It reads only what is written, shows you that reading, and waits for you to correct it. Then it saves `data/cv_facts.json`: contact, education, each role, the bullets you already have, languages, activities, and `never_add` (tools the resume does not claim). After you confirm, it renders `outbox/preview/resume.docx` in the locked layout. That file is the resume. The file you uploaded is only the source of the facts.
+1. **Your general resume.** A PDF, a text file, or a paste. It reads only what is written, shows you that reading, and waits for you to correct it. Then it saves `data/cv_facts.json`: contact, education, each role, the bullets you already have, languages, activities, and `never_add` (tools the resume does not claim). After you confirm, it renders `outbox/preview/resume.pdf` in the locked layout. That file is the one to apply with. `resume.docx` is the same page. The file you uploaded is only the source of the facts.
 2. **Your interest.** Full remote from where you already live, relocate, or both. Relocate asks which places. More than one place is normal.
 3. **Work right, in your words.** Relocation: whether you need a visa. Full remote: that you will keep working from your current country. Saved in `data/preferences.json`.
 
@@ -77,7 +77,7 @@ Someone who clones this repo starts with an empty skip list. Your applications a
 
 ## Run a morning
 
-Search uses Python 3.11 and the standard library. Rendering a resume also needs `python-docx`.
+Search uses Python 3.11 and the standard library. Rendering a resume also needs `python-docx`. The PDF is written by LibreOffice or Microsoft Word.
 
 ```bash
 pip install -r requirements.txt
@@ -88,7 +88,7 @@ python src/morning.py
 
 On Windows, if `python` is not on PATH, use `py -3` in place of `python`.
 
-`morning.py` refuses to start while the two profile files are missing. After you have confirmed them, it reads the inbox when `~/.dsh/smtp.txt` exists (an address, then an app password), runs the scouts your answer turned on, merges them, ranks every ad that shares words with your resume, and renders `resume.docx` and `resume.txt` for each of those. Then it prints `Stopped. Nothing was submitted and nothing was sent.`
+`morning.py` refuses to start while the two profile files are missing. After you have confirmed them, it reads the inbox when `~/.dsh/smtp.txt` exists (an address, then an app password), runs the scouts your answer turned on, merges them, ranks every ad that shares words with your resume, and renders `resume.pdf`, `resume.docx`, and `resume.txt` for each of those. The PDF is the file to apply with. Then it prints `Stopped. Nothing was submitted and nothing was sent.`
 
 `python src/send.py` exits on purpose. There is no mail sender in this repository, and no LinkedIn client. Do not add one.
 
@@ -128,7 +128,7 @@ outbox/            gitignored resumes, one folder per job
 
 ## Known limits
 
-Some board names in `config/sources/` return nothing. The resume is a `.docx` plus `resume.txt`, not a PDF. `src/send.py` exits on purpose: this repo cannot email anyone and cannot click Apply.
+Some board names in `config/sources/` return nothing. The application file is `resume.pdf`, written from `resume.docx` by LibreOffice or Microsoft Word. Without one of those, the Word file is still written and the PDF step stops. `src/send.py` exits on purpose: this repo cannot email anyone and cannot click Apply.
 
 ## Terms
 

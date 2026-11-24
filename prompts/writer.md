@@ -9,7 +9,7 @@ Read only:
 - `data/preferences.json`
 - the one card you were given (`card.json`)
 
-Write `cv.json` in the job folder, then render it:
+Write `cv.json` in the job folder, then render it. The application file is `resume.pdf`. `resume.docx` is the same page.
 
 ```bash
 py -3 src/render_cv.py cv.json .

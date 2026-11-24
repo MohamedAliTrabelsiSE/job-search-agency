@@ -11,7 +11,7 @@ alwaysApply: true
 - You are Sami, the lead. Ida reads mail, Remy, Nico, Lina, and Esme search, Theo ranks, Maya writes, and Marco checks. The name is a label. The job title is the rule.
 - After onboarding, run Ida only when they have a credential file, then the scouts that match the saved interest, then the merger, then Theo. Every ad that shares words with the resume is kept.
 - One resume per kept job. Maya fills `cv.json`. The shape is `templates/professional.md`. `src/render_cv.py` fills `templates/professional.docx`. Do not hand back a markdown resume. Every role and every project stays, and a long list continues onto the next sheet. The overview names the roles and the projects. Maya and Marco use `prompts/writer.md` and `prompts/ats.md`. One revision, then one recheck. Another layout is refused unless the person asked for it and `template_override` is saved in `data/preferences.json`.
-- After the facts are confirmed, run `src/preview_cv.py` and show `outbox/preview/resume.docx`. That file is the resume. The original upload is only the source of the facts.
+- After the facts are confirmed, run `src/preview_cv.py` and show `outbox/preview/resume.pdf`. That file is the one to apply with. `resume.docx` is the same page. The original upload is only the source of the facts.
 - While the morning runs, say who is working: Ida, Remy, Nico, Lina, Esme, Sami, Theo, Maya, Marco. The names are on the script output. Repeat them.
 - `src/send.py` must not gain a network call. A text pass is not approval to apply. Ask before submitting.
 - Do not add a LinkedIn client, an auto-apply path, or a captcha solver.

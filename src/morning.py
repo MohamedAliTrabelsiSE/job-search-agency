@@ -80,8 +80,8 @@ def main():
         if remaining:
             print(f"{ATS} blocked  {card['company']}  {card['title'][:40]}")
             continue
-        render_files(cv, folder, preferences)
-        print(f"{WRITER} drafted  {ATS} passed  {card.get('score', '')}  {card.get('why', '')}  {folder}")
+        _docx, _text, pdf_path = render_files(cv, folder, preferences)
+        print(f"{WRITER} drafted  {ATS} passed  {card.get('score', '')}  {card.get('why', '')}  {pdf_path}")
 
     _path, text = write_thread(ROOT, reviews)
     print(text, end="")

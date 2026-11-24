@@ -26,9 +26,10 @@ def main():
     facts = load_json(ROOT / "data" / "cv_facts.json")
     preferences = load_json(ROOT / "data" / "preferences.json")
     folder = ROOT / "outbox" / "preview"
-    docx_path, text_path = render_files(build_preview(facts, preferences), folder, preferences)
+    docx_path, text_path, pdf_path = render_files(build_preview(facts, preferences), folder, preferences)
     print(docx_path)
     print(text_path)
+    print(pdf_path)
     return 0
 
 

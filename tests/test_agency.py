@@ -22,10 +22,12 @@ from render_cv import (
     _header_name,
     _pack_contact,
     _pack_skills,
+    _soffice_command,
     _text_twips,
     normalize,
     page_is_locked,
     refuse_other_layout,
+    to_pdf,
     to_text,
 )
 from screen import classify_worldwide
@@ -213,6 +215,26 @@ class AgencyTest(unittest.TestCase):
             "OpenAI Realtime API", "function calling",
         ])
         self.assertGreater(len(rows[0]), 3)
+
+    def test_pdf_comes_from_the_docx(self):
+        command = _soffice_command("soffice", Path("out/resume.docx"), Path("C:/tmp/profile"))
+        self.assertEqual(command[2].startswith("-env:UserInstallation="), True)
+        self.assertEqual(command[4], "pdf")
+        self.assertTrue(str(command[-1]).endswith("resume.docx"))
+
+    def test_pdf_explains_when_no_converter(self):
+        import render_cv
+        previous_soffice = render_cv.find_soffice
+        previous_word = render_cv._convert_with_word
+        render_cv.find_soffice = lambda: None
+        render_cv._convert_with_word = lambda *_args: False
+        try:
+            with self.assertRaises(RuntimeError) as caught:
+                to_pdf(Path("resume.docx"))
+        finally:
+            render_cv.find_soffice = previous_soffice
+            render_cv._convert_with_word = previous_word
+        self.assertIn("resume.docx", str(caught.exception))
 
     def test_header_name_has_no_letter_spacing(self):
         self.assertEqual(_header_name("Hana Wrighton"), "HANA WRIGHTON")

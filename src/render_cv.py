@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
-"""Render one job's cv.json into a DOCX and a plain-text copy.
+"""Render one job's cv.json into a DOCX, a PDF, and a plain-text copy.
 
 The DOCX is the file in templates/professional.docx with the person's facts
 written into it, so the fonts, bullets, and spacing stay those of that file.
-A long list of roles or projects continues onto the next sheet.
+The PDF is that same file, for the application. A long list of roles or
+projects continues onto the next sheet.
 """
 import copy
+import shutil
+import subprocess
+import sys
+import tempfile
 from pathlib import Path
 
 from docx import Document
@@ -569,6 +574,91 @@ def normalize(cv):
     return out
 
 
+def find_soffice():
+    """LibreOffice writes the PDF. Word is the other converter."""
+    found = shutil.which("soffice") or shutil.which("soffice.exe")
+    if found:
+        return found
+    roots = [
+        os_programs(),
+        os_programs(x86=True),
+        Path.home() / "AppData" / "Local" / "Programs",
+        Path.home() / "AppData" / "Local",
+    ]
+    for root in roots:
+        for name in ("soffice.exe", "soffice.com", "soffice"):
+            path = root / "LibreOffice" / "program" / name
+            if path.is_file():
+                return str(path)
+    return None
+
+
+def os_programs(x86=False):
+    if x86:
+        return Path(r"C:\Program Files (x86)")
+    return Path(r"C:\Program Files")
+
+
+def _soffice_command(soffice, docx_path, profile):
+    return [
+        soffice,
+        "--headless",
+        f"-env:UserInstallation={Path(profile).as_uri()}",
+        "--convert-to",
+        "pdf",
+        "--outdir",
+        str(Path(docx_path).parent),
+        str(docx_path),
+    ]
+
+
+def _convert_with_soffice(soffice, docx_path):
+    profile = Path(tempfile.mkdtemp(prefix="resume-pdf-"))
+    command = _soffice_command(soffice, docx_path, profile)
+    subprocess.run(command, check=True, timeout=180, capture_output=True)
+
+
+def _convert_with_word(docx_path, pdf_path):
+    if sys.platform != "win32":
+        return False
+    try:
+        import win32com.client
+    except ImportError:
+        return False
+    word = None
+    document = None
+    try:
+        word = win32com.client.Dispatch("Word.Application")
+        word.Visible = False
+        document = word.Documents.Open(str(Path(docx_path).resolve()))
+        document.SaveAs2(str(Path(pdf_path).resolve()), FileFormat=17)
+        return pdf_path.is_file()
+    except Exception:
+        return False
+    finally:
+        if document is not None:
+            document.Close(False)
+        if word is not None:
+            word.Quit()
+
+
+def to_pdf(docx_path):
+    """Write resume.pdf beside the docx. The PDF is the file to apply with."""
+    docx_path = Path(docx_path)
+    pdf_path = docx_path.with_suffix(".pdf")
+    soffice = find_soffice()
+    if soffice:
+        _convert_with_soffice(soffice, docx_path)
+    elif not _convert_with_word(docx_path, pdf_path):
+        raise RuntimeError(
+            "Could not write resume.pdf. Install LibreOffice or Microsoft Word. "
+            "The page is still in resume.docx."
+        )
+    if not pdf_path.is_file():
+        raise RuntimeError("The converter did not write resume.pdf.")
+    return pdf_path
+
+
 def render_files(cv, out_dir, preferences=None):
     refuse_other_layout(cv, preferences)
     folder = Path(out_dir)
@@ -578,7 +668,8 @@ def render_files(cv, out_dir, preferences=None):
     ready = normalize(cv)
     build(ready, str(docx_path))
     text_path.write_text(to_text(ready), encoding="utf-8")
-    return docx_path, text_path
+    pdf_path = to_pdf(docx_path)
+    return docx_path, text_path, pdf_path
 
 
 if __name__ == "__main__":
@@ -592,6 +683,7 @@ if __name__ == "__main__":
     payload = json.loads(_Path(sys.argv[1]).read_text(encoding="utf-8"))
     prefs_path = _Path(__file__).resolve().parents[1] / "data" / "preferences.json"
     preferences = json.loads(prefs_path.read_text(encoding="utf-8")) if prefs_path.exists() else None
-    docx_path, text_path = render_files(payload, sys.argv[2], preferences)
+    docx_path, text_path, pdf_path = render_files(payload, sys.argv[2], preferences)
     print(docx_path)
     print(text_path)
+    print(pdf_path)
