@@ -31,7 +31,8 @@ def skills_in(text):
     return found
 
 
-def compare(card, facts):
+def compare(card, facts, policy=None):
+    policy=policy or {}
     text = card.get('description') or card.get('excerpt') or ''
     target = skills_in(card.get('title', '') + '\n' + text)
     known = skills_in(json.dumps({k: facts.get(k) for k in ('tech','experience','projects')}, ensure_ascii=False))
@@ -45,8 +46,8 @@ def compare(card, facts):
     missing_alternatives=[group for group in alternative_results if not group['satisfied']]
     shared = sorted(target & known)
     gaps = sorted(required - known)
-    years_match = re.search(r'(\d+)\s*\+?\s*years?\s+(?:of\s+)?(?:relevant\s+|professional\s+|industry\s+)?experience', requirements['required_text'], re.I)
-    years_required = int(years_match.group(1)) if years_match else None
+    years=re.findall(r'(\d+)(?:\s*[-–]\s*\d+)?\s*\+?\s*years?\s+(?:of\s+)?(?:(?:relevant|professional|industry|software|backend|engineering|development)\s+)*experience', requirements['required_text'], re.I)
+    years_required=max(map(int,years)) if years else None
     candidate_years = facts.get('years_experience')
     if candidate_years is None:
         summary = facts.get('summary') or ''
@@ -62,14 +63,23 @@ def compare(card, facts):
         reasons.append('Missing essential expertise: '+', '.join(missing_expertise))
     if requirements['unresolved']:
         reasons.append('Mandatory expertise requires interpretation and evidence review.')
+    experience_gap=0
     if decision != 'excluded' and years_required is not None:
         if candidate_years is None:
             decision = 'needs_verification'
-        elif candidate_years < years_required and decision != 'needs_verification':
-            decision = 'stretch'
+            reasons.append('Candidate experience duration is unconfirmed.')
+        elif candidate_years < years_required:
+            experience_gap=years_required-candidate_years
+            allowed=(experience_gap <= policy.get('max_experience_gap',1) and
+                     candidate_years/years_required >= policy.get('min_experience_ratio',2/3))
+            reasons.append(f'Experience gap: {candidate_years:g} confirmed years versus {years_required} required; shortfall {experience_gap:g}.')
+            if not allowed:
+                decision='excluded'
+            elif decision != 'needs_verification':
+                decision='stretch'
     # Exact technical overlap outranks arbitrary prose. Missing requirements
     # lower fit without pretending a skill gap makes an application illegal.
-    score = max(0, len(shared) * 3 + len(required & known) * 2 - len(gaps) * 2)
+    score = max(0, len(shared) * 3 + len(required & known) * 2 - len(gaps) * 2 - experience_gap*3 - len(missing_alternatives)*2)
     return {'score':score, 'why':', '.join(shared) if shared else 'no technical overlap with your resume',
             'matched_skills':shared, 'required_skills':sorted(required),
             'missing_required_skills':gaps, 'decision':decision,
@@ -77,4 +87,5 @@ def compare(card, facts):
             'missing_essential_expertise':missing_expertise,'unresolved_requirements':requirements['unresolved'],
             'requirement_evidence':requirements['evidence'],'decision_reasons':reasons,
             'experience_requirement_years':years_required, 'confirmed_experience_years':candidate_years,
+            'experience_gap_years':experience_gap,
             'assessment_method':'deterministic skill aliases and requirement-line heuristics'}

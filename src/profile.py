@@ -30,6 +30,15 @@ def validate(facts, preferences):
             elif 'bullets' in keys and (not isinstance(item['bullets'], list) or not all(isinstance(b,str) for b in item['bullets'])):
                 errors.append('Invalid bullets in ' + section)
     interest = preferences.get('interest')
+    if 'years_experience' in facts and (isinstance(facts['years_experience'],bool) or not isinstance(facts['years_experience'],(int,float)) or facts['years_experience']<0):
+        errors.append('years_experience must be a confirmed nonnegative number.')
+    policy=preferences.get('matching_policy',{})
+    if not isinstance(policy,dict):
+        errors.append('matching_policy must be an object.')
+    else:
+        for key,low,high in [('max_experience_gap',0,50),('min_experience_ratio',0,1)]:
+            if key in policy and (isinstance(policy[key],bool) or not isinstance(policy[key],(int,float)) or not low<=policy[key]<=high):
+                errors.append('Invalid matching policy: '+key)
     if interest not in ('remote','relocate','both'):
         errors.append('Interest must be remote, relocate or both.')
     if not preferences.get('current_country'):

@@ -54,12 +54,12 @@ def _date_key(published):
     return tuple(-ord(ch) for ch in text)
 
 
-def rank_cards(cards, facts):
+def rank_cards(cards, facts, policy=None):
     kept = []
     skipped = []
     for card in cards:
         scored = dict(card)
-        scored.update(compare(card, facts))
+        scored.update(compare(card, facts, policy))
         if scored['decision'] != 'excluded':
             kept.append(scored)
         else:

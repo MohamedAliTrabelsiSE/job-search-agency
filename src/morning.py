@@ -74,7 +74,7 @@ def run_workflow(root=ROOT, reports=None, render=True, read_mail=True):
         cards = [card for card in cards if not (store.application(card) or {}).get('status') in ('submitted','duplicate_blocked')]
         write_json(run_dir/'pool.json', {'cards':cards,'count':len(cards)})
         print('Theo ranking technical fit and reporting gaps.', flush=True)
-        kept, skipped = rank_cards(cards, facts)
+        kept, skipped = rank_cards(cards, facts, prefs.get('matching_policy'))
         for path in paths:
             for excluded in load_json(path).get('candidates', []):
                 if excluded.get('eligibility', {}).get('status') == 'excluded':

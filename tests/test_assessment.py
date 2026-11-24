@@ -63,6 +63,21 @@ class RestrictionTest(unittest.TestCase):
 
 
 class RequirementsTest(unittest.TestCase):
+    def test_experience_stretch_is_bounded_and_penalized(self):
+        facts=dict(FACTS,years_experience=2)
+        outcomes=[]
+        for years,expected in ((2,'recommended'),(3,'stretch'),(5,'excluded'),(8,'excluded'),(20,'excluded')):
+            with self.subTest(years=years):
+                result=compare({'title':'Backend Engineer','description':f'Required: Python. {years} years of experience.'},facts)
+                self.assertEqual(result['decision'],expected)
+                outcomes.append(result)
+        self.assertGreater(outcomes[0]['score'],outcomes[1]['score'])
+        self.assertIn('experience',outcomes[-1]['decision_reasons'][0].lower())
+
+    def test_optional_years_do_not_become_a_minimum(self):
+        result=compare({'title':'Backend Engineer','description':'Required: Python.\nNice to have:\n20 years of experience.'},dict(FACTS,years_experience=2))
+        self.assertEqual(result['decision'],'recommended')
+        self.assertIsNone(result['experience_requirement_years'])
     def test_preferred_and_alternative_skills_do_not_become_independent_requirements(self):
         for text in ('Required: Python.\nNice to have:\nExperience with Go.',
                      'Required: experience with Go or Python.'):
