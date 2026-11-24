@@ -1,6 +1,7 @@
 """Transparent technical matching. A score is evidence overlap, not a probability."""
 import json
 import re
+from requirements import extract, expertise_in
 
 SKILLS = {
     'TypeScript': ['typescript'], 'JavaScript': ['javascript'],
@@ -35,17 +36,16 @@ def compare(card, facts):
     target = skills_in(card.get('title', '') + '\n' + text)
     known = skills_in(json.dumps({k: facts.get(k) for k in ('tech','experience','projects')}, ensure_ascii=False))
     known -= skills_in(' '.join(facts.get('never_add') or []))
-    required = set()
-    # Explicit required_skills from reviewed cards take precedence. Otherwise,
-    # requirement lines are heuristics, reported as such in the output.
-    for line in re.split(r'[\n.!]', text):
-        if re.search(r'required|must.have|hands.on|proficien|experience (?:with|in)|strong .*knowledge', line, re.I):
-            required |= skills_in(line)
-    required |= skills_in(' '.join(card.get('required_skills') or []))
-    required |= skills_in(card.get('title') or '')
+    requirements=extract(card,skills_in)
+    required=requirements['required']
+    candidate_text=json.dumps({k:facts.get(k) for k in ('tech','experience','projects')})
+    expertise=expertise_in(candidate_text,candidate=True)
+    missing_expertise=sorted((requirements['essential_expertise']-expertise) | (requirements['essential_skills']-known))
+    alternative_results=[dict(group,satisfied=bool(set(group['options']) & (known|expertise))) for group in requirements['alternatives']]
+    missing_alternatives=[group for group in alternative_results if not group['satisfied']]
     shared = sorted(target & known)
     gaps = sorted(required - known)
-    years_match = re.search(r'(\d+)\s*\+?\s*years?\s+(?:of\s+)?(?:relevant\s+|professional\s+|industry\s+)?experience', text, re.I)
+    years_match = re.search(r'(\d+)\s*\+?\s*years?\s+(?:of\s+)?(?:relevant\s+|professional\s+|industry\s+)?experience', requirements['required_text'], re.I)
     years_required = int(years_match.group(1)) if years_match else None
     candidate_years = facts.get('years_experience')
     if candidate_years is None:
@@ -56,7 +56,12 @@ def compare(card, facts):
             candidate_years = int(raw) if raw.isdigit() else {'one':1,'two':2,'three':3,'four':4,'five':5}[raw]
     eligibility = card.get('eligibility') or {}
     status = eligibility.get('status', 'eligible')
-    decision = 'excluded' if status == 'excluded' or not shared else 'needs_verification' if status == 'needs_verification' else 'stretch' if gaps else 'recommended'
+    reasons=[]
+    decision = 'excluded' if status == 'excluded' or not shared or missing_expertise else 'needs_verification' if status == 'needs_verification' or requirements['unresolved'] else 'stretch' if gaps or missing_alternatives else 'recommended'
+    if missing_expertise:
+        reasons.append('Missing essential expertise: '+', '.join(missing_expertise))
+    if requirements['unresolved']:
+        reasons.append('Mandatory expertise requires interpretation and evidence review.')
     if decision != 'excluded' and years_required is not None:
         if candidate_years is None:
             decision = 'needs_verification'
@@ -68,5 +73,8 @@ def compare(card, facts):
     return {'score':score, 'why':', '.join(shared) if shared else 'no technical overlap with your resume',
             'matched_skills':shared, 'required_skills':sorted(required),
             'missing_required_skills':gaps, 'decision':decision,
+            'preferred_skills':sorted(requirements['preferred']), 'one_of_requirements':alternative_results,
+            'missing_essential_expertise':missing_expertise,'unresolved_requirements':requirements['unresolved'],
+            'requirement_evidence':requirements['evidence'],'decision_reasons':reasons,
             'experience_requirement_years':years_required, 'confirmed_experience_years':candidate_years,
             'assessment_method':'deterministic skill aliases and requirement-line heuristics'}
