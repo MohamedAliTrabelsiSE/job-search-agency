@@ -288,23 +288,66 @@ def _pack_skills(words):
     return rows
 
 
-def _set_tabs(paragraph, positions):
-    ppr = paragraph.find(qn("w:pPr"))
-    if ppr is None:
-        ppr = OxmlElement("w:pPr")
-        paragraph.insert(0, ppr)
-    old = ppr.find(qn("w:tabs"))
-    if old is not None:
-        ppr.remove(old)
-    if not positions:
-        return
-    tabs = OxmlElement("w:tabs")
-    for pos in positions:
-        tab = OxmlElement("w:tab")
-        tab.set(qn("w:val"), "left")
-        tab.set(qn("w:pos"), str(int(pos)))
-        tabs.append(tab)
-    ppr.insert(0, tabs)
+def _skills_table(words, proto):
+    """Three columns. A tab stop lets a long name print on top of the next one."""
+    cols = 3
+    tbl = OxmlElement("w:tbl")
+    tbl_pr = OxmlElement("w:tblPr")
+    width = OxmlElement("w:tblW")
+    width.set(qn("w:w"), "5000")
+    width.set(qn("w:type"), "pct")
+    tbl_pr.append(width)
+    layout = OxmlElement("w:tblLayout")
+    layout.set(qn("w:type"), "fixed")
+    tbl_pr.append(layout)
+    borders = OxmlElement("w:tblBorders")
+    for edge in ("top", "left", "bottom", "right", "insideH", "insideV"):
+        line = OxmlElement("w:" + edge)
+        line.set(qn("w:val"), "nil")
+        borders.append(line)
+    tbl_pr.append(borders)
+    margin = OxmlElement("w:tblCellMar")
+    for edge, size in (("top", "20"), ("left", "0"), ("bottom", "20"), ("right", "160")):
+        node = OxmlElement("w:" + edge)
+        node.set(qn("w:w"), size)
+        node.set(qn("w:type"), "dxa")
+        margin.append(node)
+    tbl_pr.append(margin)
+    tbl.append(tbl_pr)
+    grid = OxmlElement("w:tblGrid")
+    for _ in range(cols):
+        col = OxmlElement("w:gridCol")
+        col.set(qn("w:w"), "3504")
+        grid.append(col)
+    tbl.append(grid)
+    runs = [child for child in proto if child.tag == qn("w:r")]
+    base_rpr = runs[0].find(qn("w:rPr")) if runs else None
+    index = 0
+    while index < len(words):
+        row = OxmlElement("w:tr")
+        for _col in range(cols):
+            cell = OxmlElement("w:tc")
+            tc_pr = OxmlElement("w:tcPr")
+            tc_w = OxmlElement("w:tcW")
+            tc_w.set(qn("w:w"), "3504")
+            tc_w.set(qn("w:type"), "dxa")
+            tc_pr.append(tc_w)
+            cell.append(tc_pr)
+            paragraph = OxmlElement("w:p")
+            if index < len(words):
+                run = OxmlElement("w:r")
+                if base_rpr is not None:
+                    run.append(copy.deepcopy(base_rpr))
+                text = OxmlElement("w:t")
+                text.set(qn("xml:space"), "preserve")
+                text.text = words[index]
+                run.append(text)
+                paragraph.append(run)
+                index += 1
+            cell.append(paragraph)
+            row.append(cell)
+        tbl.append(row)
+    return tbl
 
 
 def _header_name(name):
@@ -340,8 +383,7 @@ def _clear_header(part):
 
 
 def _apply_frame(doc, cv):
-    """The template keeps a sample name in the header and a sample line in the footer."""
-    contact = _contact_text(cv)
+    """The template repeats a name in the header and a contact line in the footer."""
     for section in doc.sections:
         headers = (section.header, section.first_page_header, section.even_page_header)
         footers = (section.footer, section.first_page_footer, section.even_page_footer)
@@ -349,8 +391,8 @@ def _apply_frame(doc, cv):
             if part is not None:
                 _clear_header(part)
         for part in footers:
-            if part is not None and contact:
-                _replace_first_text(part.paragraphs, contact)
+            if part is not None:
+                _clear_header(part)
 
 
 def _dated_parts(left, right):
@@ -450,20 +492,7 @@ def build(cv, out_path):
     skills = _skill_words(cv.get("tech"))
     if skills:
         heading("SKILLS")
-        for row in _pack_skills(skills):
-            parts = []
-            positions = []
-            cursor = 0
-            for index, word in enumerate(row):
-                if index:
-                    cursor += SKILL_GAP
-                    positions.append(cursor)
-                    parts.append("\t")
-                parts.append(word)
-                cursor += _text_twips(word)
-            row_el = _fill(proto["skills"], parts)
-            _set_tabs(row_el, positions)
-            add(row_el)
+        add(_skills_table(skills, proto["skills"]))
 
     if (cv.get("languages") or "").strip():
         heading("LANGUAGES")

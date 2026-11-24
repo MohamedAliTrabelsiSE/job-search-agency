@@ -32,9 +32,9 @@ Degree | School, Location    dates
 
 **SKILLS**
 
-skill    skill    skill    skill
+skill    skill    skill
 
-A row fills the width. A short name does not sit alone in a wide column.
+Three columns. Each skill stays in its own cell, so a long name cannot run into the next one.
 
 **LANGUAGES**
 

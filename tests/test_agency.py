@@ -249,6 +249,22 @@ class AgencyTest(unittest.TestCase):
         self.assertNotIn("H A N A", xml)
         self.assertNotIn("w:pict", xml)
 
+    def test_skills_do_not_overlap_and_footer_stays_clear(self):
+        import zipfile
+        from render_cv import build
+        facts = load_json(ROOT / "config" / "cv_facts.example.json")
+        prefs = load_json(ROOT / "config" / "preferences.example.json")
+        cv = draft(facts, prefs, {"path": "worldwide", "title": "", "excerpt": ""})
+        path = Path(tempfile.mkdtemp()) / "resume.docx"
+        build(normalize(cv), str(path))
+        package = zipfile.ZipFile(path)
+        document = package.read("word/document.xml").decode("utf-8")
+        self.assertIn("w:tbl", document)
+        self.assertIn("TypeScript", document)
+        footer = package.read("word/footer2.xml").decode("utf-8")
+        self.assertNotIn("@", footer)
+        self.assertNotIn("hanawrighton", footer.lower())
+
     def test_header_name_has_no_letter_spacing(self):
         self.assertEqual(_header_name("Hana Wrighton"), "HANA WRIGHTON")
         self.assertEqual(_header_name("Mohamed Ali Trabelsi"), "MOHAMED ALI TRABELSI")
