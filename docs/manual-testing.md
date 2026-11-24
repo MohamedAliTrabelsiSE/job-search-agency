@@ -15,6 +15,18 @@ Expected branch: `codex/evidence-based-job-workflow`. Tests must pass.
 CI is configured for Windows and Linux; remote CI results are not implied by a
 local run. Do not merge if either platform fails after you choose to push.
 
+For the latest assessment fixes, run this focused check as well:
+
+```powershell
+.\.venv\Scripts\python.exe -X utf8 -m unittest discover -s tests -p "test_adversarial.py" -v
+```
+
+Expected: every case passes. The fictional cases verify that country exceptions
+stop rendering, company headquarters do not restrict applicants, negated office
+wording does not hide actual attendance requirements, independent skill clauses
+keep their meaning, decimals and experience ranges retain their values, and
+negative skill statements cannot establish expertise.
+
 ## 2. Exercise the complete fictional workflow
 
 ```powershell

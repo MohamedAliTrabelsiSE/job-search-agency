@@ -1,7 +1,7 @@
 """Transparent technical matching. A score is evidence overlap, not a probability."""
-import json
 import re
-from requirements import extract, expertise_in, EXPERTISE
+from evidence import positive_claim_text
+from requirements import extract, expertise_in, experience_years, EXPERTISE
 
 SKILLS = {
     'TypeScript': ['typescript','ts'], 'JavaScript': ['javascript','js'],
@@ -37,20 +37,21 @@ def compare(card, facts, policy=None):
     policy=policy or {}
     text = card.get('description') or card.get('excerpt') or ''
     target = skills_in(card.get('title', '') + '\n' + text)
-    known = skills_in(json.dumps({k: facts.get(k) for k in ('tech','experience','projects')}, ensure_ascii=False))
+    candidate_text=positive_claim_text({k:facts.get(k) for k in ('tech','experience','projects')})
+    known = skills_in(candidate_text)
     known -= skills_in(' '.join(facts.get('never_add') or []))
     requirements=extract(card,skills_in)
     required=requirements['required']
-    candidate_text=json.dumps({k:facts.get(k) for k in ('tech','experience','projects')})
     expertise=expertise_in(candidate_text,candidate=True)
+    expertise -= expertise_in(' '.join(facts.get('never_add') or []),candidate=True)
     missing_expertise=sorted((requirements['essential_expertise']-expertise) | (requirements['essential_skills']-known))
     alternative_results=[dict(group,satisfied=bool(set(group['options']) & (known|expertise))) for group in requirements['alternatives']]
     missing_alternatives=[group for group in alternative_results if not group['satisfied']]
     essential_alternative_gaps=[group for group in missing_alternatives if set(group['options']) & set(EXPERTISE)]
     shared = sorted(target & known)
     gaps = sorted(required - known)
-    years=re.findall(r'(\d+)(?:\s*[-–]\s*\d+)?\s*\+?\s*years?\s+(?:of\s+)?(?:(?:relevant|professional|industry|software|backend|engineering|development)\s+)*experience', requirements['required_text'], re.I)
-    years_required=max(map(int,years)) if years else None
+    years=experience_years(requirements['required_text'])
+    years_required=max(years) if years else None
     candidate_years = facts.get('years_experience')
     if candidate_years is None:
         summary = facts.get('summary') or ''
@@ -83,7 +84,7 @@ def compare(card, facts, policy=None):
             experience_gap=years_required-candidate_years
             allowed=(experience_gap <= policy.get('max_experience_gap',1) and
                      candidate_years/years_required >= policy.get('min_experience_ratio',2/3))
-            reasons.append(f'Experience gap: {candidate_years:g} confirmed years versus {years_required} required; shortfall {experience_gap:g}.')
+            reasons.append(f'Experience gap: {candidate_years:g} confirmed years versus {years_required:g} required; shortfall {experience_gap:g}.')
             if not allowed:
                 decision='excluded'
             elif decision != 'needs_verification':

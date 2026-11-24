@@ -1,6 +1,7 @@
 """Conservative eligibility with separate sponsorship and relocation evidence."""
 import re
 from screen import plain
+from evidence import independent_clauses, positive_clauses
 
 COUNTRIES = {
     'germany': ['germany', 'berlin', 'hamburg', 'munich'],
@@ -50,6 +51,37 @@ def countries(text):
     return {country for country, aliases in COUNTRIES.items() if any(contains(text, a) for a in aliases)}
 
 
+def scope_members(text, exclusions=False):
+    members=countries(text)
+    # A country restriction such as "based in Germany, Europe" remains
+    # country-specific. Exception lists may exclude countries and regions.
+    if members and not exclusions:
+        return members
+    groups=[group for group,aliases in REGIONS.values() if any(contains(text,a) for a in aliases)]
+    # Nested labels such as Europe/EU use the narrower scope. Separate named
+    # regions (Europe or North America) contribute all their member countries.
+    for group in groups:
+        if not any(other < group for other in groups):
+            members |= group
+    return members
+
+
+def affirmative_match(pattern,text):
+    """Negation must qualify the matched requirement, not an unrelated benefit."""
+    for clause in independent_clauses(text):
+        for match in re.finditer(pattern,clause,re.I):
+            if not list(positive_clauses(match.group(0))):
+                continue
+            before=clause[:match.start()]
+            after=clause[match.end():]
+            if re.search(r'\b(?:no|not|without)\s+(?:(?:an?|any|longer)\s+)?$|\bnot required to\s*$',before,re.I):
+                continue
+            if re.match(r'\s*(?:(?:is|are)\s+)?(?:not (?:strictly )?required|optional|unnecessary)\b',after,re.I):
+                continue
+            return match
+    return None
+
+
 def _signals(text, yes, no, field):
     masked = text.lower()
     evidence = []
@@ -89,40 +121,61 @@ def assess(job, preferences, path):
 
     current = (preferences.get('current_country') or '').lower()
     workplace = (job.get('workplace_type') or '').lower()
-    attendance=re.search(r'hybrid (?:work|role|position)|office attendance required|\d+ days? (?:per week|a week|/week).{0,30}(?:office|on.?site)|in[- ]person (?:role|work|position)|(?:role|position|work) (?:is |requires? )?(?:on[- ]site|in[- ]person)|on[- ]site in', description, re.I)
+    attendance=affirmative_match(r'hybrid (?:work|role|position)|office attendance required|\d+ days? (?:per week|a week|/week).{0,30}(?:office|on.?site)|in[- ]person (?:role|work|position)|(?:role|position|work) (?:is |requires? )?(?:on[- ]site|in[- ]person)|on[- ]site in', description)
     if workplace in {'onsite','on-site','hybrid'} or attendance:
         result['status'] = 'excluded'
         result['reasons'].append('The role requires hybrid or office attendance, not fully remote work.')
         result['evidence'].append({'field':'work_arrangement','quote':attendance.group(0) if attendance else workplace,'meaning':'office_required'})
         return result
     restrictions=[]
+    excluded_countries=set()
     unknown=[]
+    def remove_exclusions(scope):
+        # Parse the denied geography separately: it must never become an
+        # allowed-country list or be overridden by a worldwide label.
+        marker=re.search(r'\b(?:except(?:\s+for)?|excluding|not (?:available|hiring) in|cannot hire in|do not hire in|(?:must|may) not (?:be (?:based|located)|live|reside) in)\b',scope,re.I)
+        if not marker:
+            return scope
+        denied=scope[marker.end():]
+        members=scope_members(denied,exclusions=True)
+        if members:
+            excluded_countries.update(members)
+        else:
+            unknown.append(denied)
+        result['evidence'].append({'field':'remote_countries','quote':scope[marker.start():].strip(),
+                                   'meaning':'excluded_countries' if members else 'unrecognized_exclusion'})
+        return scope[:marker.start()]
+
     def add_scope(scope, is_location=False):
-        members=countries(scope)
-        regions=[(name,group) for name,(group,aliases) in REGIONS.items() if any(contains(scope,a) for a in aliases)]
+        members=scope_members(scope)
         if members:
             restrictions.append(members)
-        elif regions:
-            # EU is narrower than Europe; select the narrowest named region.
-            restrictions.append(min((group for _,group in regions),key=len))
         elif is_location:
             remainder=re.sub(r'\b(?:remote|home based|home-based|global|worldwide|anywhere|distributed)\b','',scope,flags=re.I)
             if re.search(r'[a-z]',remainder,re.I):
                 unknown.append(scope)
         else:
             unknown.append(scope)
-        if members or regions or scope in unknown:
-            result['evidence'].append({'field':'remote_countries','quote':scope.strip(),'meaning':'restriction' if members or regions else 'unrecognized_restriction'})
-    add_scope(location,True)
-    for sentence in re.split(r'(?<=[.!?])\s+|\n+',description):
-        if re.search(r'must be based|residen|(?:candidates?|applicants?) .{0,25}(?:based|located)|hiring (?:only |in |from )|remote (?:from|in)|(?:europe|eu|america|apac|latam)[- ]only|only .{0,20}(?:europe|america|apac|latam)|based in|located in|(?:eligible|authorized|right) to work in|must (?:live|reside)|(?:role|position|hiring).{0,35}\bonly\b',sentence,re.I):
-            add_scope(sentence)
+        if members or scope in unknown:
+            result['evidence'].append({'field':'remote_countries','quote':scope.strip(),'meaning':'restriction' if members else 'unrecognized_restriction'})
+    add_scope(remove_exclusions(location),True)
+    for sentence in independent_clauses(description):
+        if re.search(r'remote|work from|hir(?:e|ing)|applicants?|candidates?|residents?|role|position',sentence,re.I):
+            sentence=remove_exclusions(sentence)
+        # Company headquarters describe the employer, not where applicants
+        # must live. Evaluate candidate clauses separately in mixed sentences.
+        clause=re.sub(r'\b(?:we|our (?:company|team)|the company)\s+(?:are |is )?(?:based|located|headquartered) in\b[^,]*,?', '', sentence, flags=re.I)
+        if affirmative_match(r'must be based|residen|(?:candidates?|applicants?) .{0,25}(?:based|located)|hiring (?:only |in |from )|remote (?:from|in)|(?:europe|eu|america|apac|latam)[- ]only|only .{0,20}(?:europe|america|apac|latam)|based in|located in|(?:eligible|authorized|right) to work in|must (?:live|reside)|(?:role|position|hiring).{0,35}\bonly\b',clause):
+            add_scope(clause)
     # A supported restriction can exclude; unknown geography cannot establish
     # eligibility even when a company description says "worldwide".
-    if current in COUNTRIES and any(current not in group for group in restrictions):
+    if current in excluded_countries:
+        result['status'] = 'excluded'
+        result['reasons'].append('The ad explicitly excludes the current work country.')
+    elif current in COUNTRIES and any(current not in group for group in restrictions):
         result['status'] = 'excluded'
         result['reasons'].append('Remote hiring is restricted to other countries.')
-    elif unknown or (restrictions and current not in COUNTRIES):
+    elif unknown or ((restrictions or excluded_countries) and current not in COUNTRIES):
         result['reasons'].append('Verify unrecognized hiring geography before applying.')
     elif restrictions and current and ('remote' in text.lower() or job.get('is_remote')):
         result['status'] = 'eligible'

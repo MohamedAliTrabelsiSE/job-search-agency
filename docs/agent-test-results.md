@@ -98,3 +98,26 @@ validation-only change. The complete local suite now passes 62 tests;
 - The fictional renderer demo still produces two source-backed application PDFs;
   no template/layout change is part of this correction. Manual user acceptance
   and remote Windows/Linux CI remain pending. No merge, push or publication occurred.
+
+## Follow-up: adversarial assessment corrections (2026-11-25)
+
+- Reproduced all ten audit failures before implementation, then added them to
+  `tests/test_adversarial.py`. The original standalone reproduction now passes.
+- Fixed country/region exceptions, attendance negation, company-versus-candidate
+  location context, independent mandatory/preferred clauses, preservation of prior
+  mandatory requirements across alternatives, decimal and differently phrased
+  experience durations, and negative candidate claims counting as expertise.
+- Added controls for unaffected countries, unknown exception geography, real office
+  requirements following unrelated denials, mixed headquarters/hiring sentences,
+  optional experience, range minima, positive evidence after a denial, and
+  `never_add` expertise. Country restrictions remain narrower than region labels.
+- All 105 local unittest cases pass. The excluded-country workflow regression
+  verifies that the mocked renderer is never called. It does not submit a job or
+  depend on a PDF converter.
+- The isolated offline demo at `tmp/adversarial-fix-demo` completes with the expected
+  partial source coverage, three shortlisted jobs, two drafts, one verification
+  hold, and no errors. PDF conversion was disabled; rendering/layout code did not
+  change and was not visually revalidated during this correction.
+- Natural-language extraction remains heuristic. These tests cover the stated
+  examples and nearby controls, not every possible ad wording. User acceptance
+  and remote CI remain pending; nothing was merged, published or submitted.

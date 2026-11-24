@@ -21,11 +21,22 @@ def expertise_in(text,candidate=False):
     return {name for name,patterns in EXPERTISE.items() if re.search(patterns[int(candidate)],text,re.I)}
 
 
+def experience_years(text):
+    """Recognize minimum durations, retaining decimals and range lower bounds."""
+    number=r'\d+(?:\.\d+)?'
+    pattern=(r'(?<![\w.])('+number+r')(?:\s*[-–]\s*'+number+r')?\s*\+?\s*years?\s+'
+             r'(?:of\s+)?(?:(?:relevant|professional|industry|software|backend|engineering|development)\s+)*'
+             r'(?:experience\b|(?:in|as|working|building|developing|designing|maintaining)\b)')
+    return [float(match) for match in re.findall(pattern,text,re.I)]
+
+
 def extract(card,skills_in):
     text=structured_text(card.get('description') or card.get('excerpt') or '')
     # Recover explicit headings even in legacy flattened ad snapshots.
     text=re.sub(r'(?i)\b('+PREFERRED+'|'+REQUIRED+r')\s*:',r'\n\1:\n',text)
     text=re.sub(r'(?i)\b(nice[- ]to[- ]have(?: skills)?|what we are looking for(?: in you)?|skills, requirements and qualifications|what we offer(?: colleagues)?)\b',r'\n\1\n',text)
+    # A preference in the next independent clause cannot relabel this one.
+    text=re.sub(r'\b(required|preferred|optional)\s+(?:and|but|while)\s+',r'\1;\n',text,flags=re.I)
     context=None
     required=set(card.get('required_skills') or [])
     inferred=skills_in(card.get('title') or '')
@@ -36,7 +47,7 @@ def extract(card,skills_in):
     evidence=[]
     unresolved=[]
     required_lines=[]
-    for line in re.split(r'\n+|(?<=[.!?])\s+',text):
+    for line in re.split(r'[;\n]+|(?<=[.!?])\s+',text):
         line=line.strip(' \t-•:')
         if not line:
             continue
@@ -50,7 +61,11 @@ def extract(card,skills_in):
         outer=re.sub(r'\([^)]*\)','',line)
         if re.search(r'^(?:'+PREFERRED+r')\b|\b(?:preferred|optional)\b|\bnot (?:strictly )?required\b',outer,re.I):
             mode='preferred'
+        elif re.search(r'\b(?:is|are) required\b|\bmust[- ]have\b|\bessential\b',outer,re.I):
+            mode='required'
         elif re.search(r'\brequired\b|must[- ]have|hands[- ]on|proficien|experience (?:with|in)|strong .*knowledge|\bessential\b',line,re.I):
+            mode=mode or 'required'
+        elif experience_years(line) and re.search(r'\bat least\b|\bminimum\b',line,re.I):
             mode=mode or 'required'
         if mode not in ('required','preferred'):
             continue
@@ -61,7 +76,7 @@ def extract(card,skills_in):
             preferred |= skills
             continue
         required_lines.append(line)
-        if re.search(r'\b(?:two|three|[2-9]) (?:or more )?of\b|\bat least (?:two|three|[2-9])\b',line,re.I):
+        if re.search(r'\b(?:two|three|[2-9]) (?:or more )?of\b|\bat least (?:two|three|[2-9])\s+(?:of|from)\b',line,re.I):
             unresolved.append(line)
             continue  # Cardinality is not an ordinary one-of alternative.
         if re.search(r'academic (?:track record|performance)|ability to travel|security clearance',line,re.I):
@@ -83,7 +98,8 @@ def extract(card,skills_in):
             if len(choices)>1 and re.search(choice_marker+r'|/',clause,re.I):
                 alternatives.append({'options':sorted(choices),'quote':clause.strip()})
                 grouped |= choices
-        required -= grouped
+        # Alternatives constrain this clause only; independent earlier
+        # requirements remain mandatory even when they name the same skill.
         required |= skills-grouped
         essentials |= domains-grouped
         if re.search(r'\b(?:expert|advanced|deep knowledge|deeply familiar)\b',line,re.I):
