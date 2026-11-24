@@ -32,7 +32,9 @@ Degree | School, Location    dates
 
 **SKILLS**
 
-skill    skill    skill
+skill    skill    skill    skill
+
+A row fills the width. A short name does not sit alone in a wide column.
 
 **LANGUAGES**
 

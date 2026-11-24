@@ -17,7 +17,17 @@ from rank import rank_cards
 from thread import build_thread
 from names import speak
 from preview_cv import build_preview
-from render_cv import _header_name, normalize, page_is_locked, refuse_other_layout, to_text
+from render_cv import (
+    LINE_BUDGET,
+    _header_name,
+    _pack_contact,
+    _pack_skills,
+    _text_twips,
+    normalize,
+    page_is_locked,
+    refuse_other_layout,
+    to_text,
+)
 from screen import classify_worldwide
 
 FACTS = load_json(ROOT / "config" / "cv_facts.example.json")
@@ -184,6 +194,25 @@ class AgencyTest(unittest.TestCase):
         self.assertEqual(len(preview["projects"]), 5)
         self.assertIn("Project 0", preview["summary"])
         self.assertIn("Project 4", preview["summary"])
+
+    def test_contact_and_skills_fit_the_line(self):
+        bits = [
+            "+216 28 751 504",
+            "trabelsi.mohamedali.dev@gmail.com",
+            "Tunis, Tunisia",
+            "linkedin.com/in/mohamedalitrabelsi",
+            "github.com/MohamedAliTrabelsiSE",
+            "mohamedali-trabelsi.web.app",
+        ]
+        lines = _pack_contact(bits)
+        self.assertGreater(len(lines), 1)
+        for line in lines:
+            self.assertLessEqual(_text_twips(line), LINE_BUDGET)
+        rows = _pack_skills([
+            "TypeScript", "JavaScript", "Java", "Python", "NestJS",
+            "OpenAI Realtime API", "function calling",
+        ])
+        self.assertGreater(len(rows[0]), 3)
 
     def test_header_name_has_no_letter_spacing(self):
         self.assertEqual(_header_name("Hana Wrighton"), "HANA WRIGHTON")

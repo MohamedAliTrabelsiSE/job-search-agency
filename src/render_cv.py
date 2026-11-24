@@ -215,7 +215,16 @@ def _fill(proto, parts):
     return new_p
 
 
-def _contact_text(cv):
+# The template line is about 10,000 twips wide. Calibri at 11pt is about 100 twips a letter.
+LINE_BUDGET = 10500
+SKILL_GAP = 640
+
+
+def _text_twips(text):
+    return max(len(text or ""), 1) * 100
+
+
+def _contact_bits(cv):
     bits = []
     for line in cv.get("contact") or []:
         for seg in line:
@@ -227,7 +236,70 @@ def _contact_text(cv):
                 bits.append(url or seg[1])
             elif str(seg).strip():
                 bits.append(str(seg).strip())
-    return "  |  ".join(bits)
+    return bits
+
+
+def _pack_contact(bits):
+    """Keep each contact line on the page. A long list continues on the next line."""
+    rows = []
+    row = []
+    width = 0
+    sep = "  |  "
+    sep_w = _text_twips(sep)
+    for bit in bits:
+        extra = _text_twips(bit) if not row else sep_w + _text_twips(bit)
+        if row and width + extra > LINE_BUDGET:
+            rows.append(sep.join(row))
+            row = []
+            width = 0
+            extra = _text_twips(bit)
+        row.append(bit)
+        width += extra
+    if row:
+        rows.append(sep.join(row))
+    return rows
+
+
+def _contact_text(cv):
+    return "\n".join(_pack_contact(_contact_bits(cv)))
+
+
+def _pack_skills(words):
+    """Fill each skills row. Three wide columns leave a hole between short names."""
+    rows = []
+    row = []
+    width = 0
+    for word in words:
+        extra = _text_twips(word) if not row else SKILL_GAP + _text_twips(word)
+        if row and width + extra > LINE_BUDGET:
+            rows.append(row)
+            row = [word]
+            width = _text_twips(word)
+        else:
+            row.append(word)
+            width += extra
+    if row:
+        rows.append(row)
+    return rows
+
+
+def _set_tabs(paragraph, positions):
+    ppr = paragraph.find(qn("w:pPr"))
+    if ppr is None:
+        ppr = OxmlElement("w:pPr")
+        paragraph.insert(0, ppr)
+    old = ppr.find(qn("w:tabs"))
+    if old is not None:
+        ppr.remove(old)
+    if not positions:
+        return
+    tabs = OxmlElement("w:tabs")
+    for pos in positions:
+        tab = OxmlElement("w:tab")
+        tab.set(qn("w:val"), "left")
+        tab.set(qn("w:pos"), str(int(pos)))
+        tabs.append(tab)
+    ppr.insert(0, tabs)
 
 
 def _header_name(name):
@@ -236,11 +308,20 @@ def _header_name(name):
 
 
 def _replace_first_text(paragraphs, new_text):
+    lines = new_text.split("\n") if isinstance(new_text, str) else list(new_text)
+    if not lines:
+        return False
     for paragraph in paragraphs:
         for run in paragraph.runs:
             node = run._element.find(qn("w:t"))
             if node is not None and (node.text or "").strip():
-                node.text = new_text
+                node.text = lines[0]
+                for extra in lines[1:]:
+                    run._element.append(OxmlElement("w:br"))
+                    text = OxmlElement("w:t")
+                    text.set(qn("xml:space"), "preserve")
+                    text.text = extra
+                    run._element.append(text)
                 return True
     return False
 
@@ -286,6 +367,7 @@ def build(cv, out_path):
         "role": copy.deepcopy(saved[14]),
         "bullet": copy.deepcopy(saved[15]),
         "between": copy.deepcopy(saved[19]),
+        "before_section": copy.deepcopy(saved[11]),
         "skills": copy.deepcopy(saved[38]),
     }
     _clear_body(doc)
@@ -293,7 +375,12 @@ def build(cv, out_path):
     def add(element):
         _append(doc, element)
 
+    opened = {"yes": False}
+
     def heading(text):
+        if opened["yes"]:
+            add(copy.deepcopy(proto["before_section"]))
+        opened["yes"] = True
         add(_fill(proto["heading"], [text]))
         add(copy.deepcopy(proto["gap"]))
 
@@ -303,9 +390,8 @@ def build(cv, out_path):
         add(_fill(proto["title"], [cv["headline"]]))
         add(copy.deepcopy(proto["after_title"]))
     add(copy.deepcopy(proto["before_contact"]))
-    contact = _contact_text(cv)
-    if contact:
-        add(_fill(proto["contact"], [contact]))
+    for line in _pack_contact(_contact_bits(cv)):
+        add(_fill(proto["contact"], [line]))
     add(copy.deepcopy(proto["after_contact"]))
     add(copy.deepcopy(proto["before_heading"]))
 
@@ -316,18 +402,21 @@ def build(cv, out_path):
 
     if cv.get("experience"):
         heading("WORK   EXPERIENCE")
-        for job in cv["experience"]:
+        jobs = cv["experience"]
+        for index, job in enumerate(jobs):
             add(_fill(proto["role"], _dated_parts(
                 _role_line(job.get("title"), job.get("company")),
                 job.get("dates") or "",
             )))
             for item in job.get("bullets") or []:
                 add(_fill(proto["bullet"], [item]))
-            add(copy.deepcopy(proto["between"]))
+            if index != len(jobs) - 1:
+                add(copy.deepcopy(proto["between"]))
 
     if cv.get("projects"):
         heading("PROJECTS")
-        for proj in cv["projects"]:
+        projects = cv["projects"]
+        for index, proj in enumerate(projects):
             add(_fill(proto["role"], [proj.get("name") or ""]))
             if (proj.get("stack") or "").strip():
                 add(_fill(proto["body"], [proj["stack"].strip()]))
@@ -335,7 +424,8 @@ def build(cv, out_path):
                 add(_fill(proto["body"], [proj["tagline"].strip()]))
             for item in proj.get("bullets") or []:
                 add(_fill(proto["bullet"], [item]))
-            add(copy.deepcopy(proto["between"]))
+            if index != len(projects) - 1:
+                add(copy.deepcopy(proto["between"]))
 
     if cv.get("education"):
         heading("EDUCATION")
@@ -348,25 +438,20 @@ def build(cv, out_path):
     skills = _skill_words(cv.get("tech"))
     if skills:
         heading("SKILLS")
-        row = []
-        width = 0
-        rows = []
-        for word in skills:
-            if row and (len(row) == 3 or width + len(word) > 42):
-                rows.append(row)
-                row = []
-                width = 0
-            row.append(word)
-            width += len(word) + 2
-        if row:
-            rows.append(row)
-        for row in rows:
+        for row in _pack_skills(skills):
             parts = []
+            positions = []
+            cursor = 0
             for index, word in enumerate(row):
                 if index:
+                    cursor += SKILL_GAP
+                    positions.append(cursor)
                     parts.append("\t")
                 parts.append(word)
-            add(_fill(proto["skills"], parts))
+                cursor += _text_twips(word)
+            row_el = _fill(proto["skills"], parts)
+            _set_tabs(row_el, positions)
+            add(row_el)
 
     if (cv.get("languages") or "").strip():
         heading("LANGUAGES")
