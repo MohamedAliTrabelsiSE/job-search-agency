@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """Render one job's cv.json into a DOCX and a plain-text copy.
 
-The layout is a single column with the contact details in the body, so a
-normal applicant-tracking system can read it. A long list of roles or
-projects continues onto the next sheet. Search itself does not need this
-module. Rendering needs python-docx.
+The DOCX is the file in templates/professional.docx with the person's facts
+written into it, so the fonts, bullets, and spacing stay those of that file.
+A long list of roles or projects continues onto the next sheet.
 """
 import copy
 from pathlib import Path
@@ -170,113 +169,156 @@ def _dated_line(doc, left, right):
     return p
 
 
-def build(cv, out_path):
-    doc = Document()
-    sec = doc.sections[0]
-    sec.page_width = Cm(21.0)
-    sec.page_height = Cm(29.7)
-    sec.left_margin = Cm(1.7)
-    sec.right_margin = Cm(1.7)
-    sec.top_margin = Cm(1.35)
-    sec.bottom_margin = Cm(1.3)
+TEMPLATE = Path(__file__).resolve().parents[1] / "templates" / "professional.docx"
 
-    style = doc.styles["Normal"]
-    style.font.name = "Calibri"
-    style.font.size = Pt(BODY_SIZE)
-    style.paragraph_format.space_after = Pt(0)
-    style.paragraph_format.space_before = Pt(0)
 
-    p = doc.add_paragraph()
-    _spacing(p, before=0, after=1)
-    r = p.add_run(cv["name"])
-    _set_font(r, name="Garamond", size=40, color=BLACK)
+def _body_paras(doc):
+    return list(doc.element.body.findall(qn("w:p")))
 
-    if cv.get("headline"):
-        p = doc.add_paragraph()
-        _spacing(p, before=0, after=2)
-        r = p.add_run(cv["headline"])
-        _set_font(r, name="Georgia", size=16, italic=True, color=GRAY)
 
+def _clear_body(doc):
+    body = doc.element.body
+    for child in list(body):
+        if child.tag != qn("w:sectPr"):
+            body.remove(child)
+
+
+def _append(doc, element):
+    body = doc.element.body
+    sect = body.find(qn("w:sectPr"))
+    if sect is not None:
+        sect.addprevious(element)
+    else:
+        body.append(element)
+
+
+def _fill(proto, parts):
+    """Copy a template paragraph and replace its text. A tab is a real tab."""
+    new_p = copy.deepcopy(proto)
+    runs = [child for child in list(new_p) if child.tag == qn("w:r")]
+    for run in runs:
+        new_p.remove(run)
+    base = runs[0]
+    for part in parts:
+        run = copy.deepcopy(base)
+        for child in list(run):
+            if child.tag in (qn("w:t"), qn("w:tab")):
+                run.remove(child)
+        if part == "\t":
+            run.append(OxmlElement("w:tab"))
+        else:
+            text = OxmlElement("w:t")
+            text.set(qn("xml:space"), "preserve")
+            text.text = "" if part is None else str(part)
+            run.append(text)
+        new_p.append(run)
+    return new_p
+
+
+def _contact_text(cv):
+    bits = []
     for line in cv.get("contact") or []:
-        p = doc.add_paragraph()
-        _spacing(p, before=0, after=0)
-        for j, seg in enumerate(line):
-            if j:
-                sep = p.add_run(" | ")
-                _set_font(sep, name="Calibri", size=BODY_SIZE, color=GRAY)
+        for seg in line:
             if isinstance(seg, tuple) and seg[0] == "link":
-                add_hyperlink(p, seg[1], seg[2], size=BODY_SIZE, color=(0x43, 0x43, 0x43))
-            else:
-                r = p.add_run(str(seg))
-                _set_font(r, name="Calibri", size=BODY_SIZE, color=BODY)
+                url = seg[2] or ""
+                for prefix in ("https://", "http://"):
+                    if url.startswith(prefix):
+                        url = url[len(prefix):]
+                bits.append(url or seg[1])
+            elif str(seg).strip():
+                bits.append(str(seg).strip())
+    return "  |  ".join(bits)
+
+
+def _dated_parts(left, right):
+    if (right or "").strip():
+        return [left, "\t", right]
+    return [left]
+
+
+def build(cv, out_path):
+    if not TEMPLATE.exists():
+        raise FileNotFoundError(f"Missing resume template: {TEMPLATE}")
+    doc = Document(str(TEMPLATE))
+    saved = _body_paras(doc)
+    proto = {
+        "name": copy.deepcopy(saved[0]),
+        "title": copy.deepcopy(saved[2]),
+        "contact": copy.deepcopy(saved[5]),
+        "heading": copy.deepcopy(saved[8]),
+        "body": copy.deepcopy(saved[10]),
+        "gap": copy.deepcopy(saved[13]),
+        "role": copy.deepcopy(saved[14]),
+        "bullet": copy.deepcopy(saved[15]),
+        "skills": copy.deepcopy(saved[38]),
+    }
+    _clear_body(doc)
+
+    def add(element):
+        _append(doc, element)
+
+    def heading(text):
+        add(_fill(proto["heading"], [text]))
+        add(copy.deepcopy(proto["gap"]))
+
+    add(_fill(proto["name"], [cv["name"]]))
+    if cv.get("headline"):
+        add(_fill(proto["title"], [cv["headline"]]))
+    contact = _contact_text(cv)
+    if contact:
+        add(_fill(proto["contact"], [contact]))
 
     overview = (cv.get("summary") or "").strip() or (cv.get("work_right") or "").strip()
     if overview:
-        section_heading(doc, "PROFESSIONAL OVERVIEW")
-        p = doc.add_paragraph()
-        _spacing(p, before=1, after=0, line=1.05)
-        r = p.add_run(overview)
-        _set_font(r, name="Calibri", size=BODY_SIZE, color=BODY)
+        heading("PROFESSIONAL   OVERVIEW")
+        add(_fill(proto["body"], [overview]))
 
     if cv.get("experience"):
-        section_heading(doc, "WORK EXPERIENCE")
+        heading("WORK   EXPERIENCE")
         for job in cv["experience"]:
-            _dated_line(doc, _role_line(job.get("title"), job.get("company")), job.get("dates") or "")
-            for i, item in enumerate(job.get("bullets") or []):
-                bullet(doc, item, keep=(i == 0))
+            add(_fill(proto["role"], _dated_parts(
+                _role_line(job.get("title"), job.get("company")),
+                job.get("dates") or "",
+            )))
+            for item in job.get("bullets") or []:
+                add(_fill(proto["bullet"], [item]))
 
     if cv.get("projects"):
-        section_heading(doc, "PROJECTS")
+        heading("PROJECTS")
         for proj in cv["projects"]:
-            p = doc.add_paragraph()
-            _spacing(p, before=8, after=0)
-            label = _role_line(proj.get("name"), proj.get("stack"))
-            r = p.add_run(label)
-            _set_font(r, name="Calibri", size=BODY_SIZE, color=INK)
-            if proj.get("link"):
-                sep = p.add_run("   ")
-                _set_font(sep, name="Calibri", size=BODY_SIZE, color=GRAY)
-                add_hyperlink(p, proj["link"][0], proj["link"][1], size=BODY_SIZE, color=(0x43, 0x43, 0x43))
-            p.paragraph_format.keep_with_next = True
+            add(_fill(proto["role"], [_role_line(proj.get("name"), proj.get("stack"))]))
             if (proj.get("tagline") or "").strip():
-                p = doc.add_paragraph()
-                _spacing(p, before=0, after=1)
-                r = p.add_run(proj["tagline"])
-                _set_font(r, name="Calibri", size=BODY_SIZE, italic=True, color=GRAY)
-                p.paragraph_format.keep_with_next = True
-            for i, item in enumerate(proj.get("bullets") or []):
-                bullet(doc, item, keep=(i == 0))
+                add(_fill(proto["body"], [proj["tagline"].strip()]))
+            for item in proj.get("bullets") or []:
+                add(_fill(proto["bullet"], [item]))
 
     if cv.get("education"):
-        section_heading(doc, "EDUCATION")
+        heading("EDUCATION")
         for ed in cv["education"]:
-            _dated_line(doc, _role_line(ed.get("degree"), ed.get("school")), ed.get("dates") or "")
+            add(_fill(proto["role"], _dated_parts(
+                _role_line(ed.get("degree"), ed.get("school")),
+                ed.get("dates") or "",
+            )))
 
     skills = _skill_words(cv.get("tech"))
     if skills:
-        section_heading(doc, "SKILLS")
+        heading("SKILLS")
         for start in range(0, len(skills), 3):
             row = skills[start:start + 3]
-            p = doc.add_paragraph()
-            _spacing(p, before=1, after=0, line=1.05)
-            p.paragraph_format.tab_stops.add_tab_stop(Cm(5.8), WD_TAB_ALIGNMENT.LEFT)
-            p.paragraph_format.tab_stops.add_tab_stop(Cm(11.6), WD_TAB_ALIGNMENT.LEFT)
-            r = p.add_run("\t".join(row))
-            _set_font(r, name="Calibri", size=BODY_SIZE, color=BODY)
+            parts = []
+            for index, word in enumerate(row):
+                if index:
+                    parts.append("\t")
+                parts.append(word)
+            add(_fill(proto["skills"], parts))
 
     if (cv.get("languages") or "").strip():
-        section_heading(doc, "LANGUAGES")
-        p = doc.add_paragraph()
-        _spacing(p, before=1, after=0)
-        r = p.add_run(cv["languages"].strip())
-        _set_font(r, name="Calibri", size=BODY_SIZE, color=BODY)
+        heading("LANGUAGES")
+        add(_fill(proto["body"], [cv["languages"].strip()]))
 
     if (cv.get("activities") or "").strip():
-        section_heading(doc, "ACTIVITIES")
-        p = doc.add_paragraph()
-        _spacing(p, before=1, after=0)
-        r = p.add_run(cv["activities"].strip())
-        _set_font(r, name="Calibri", size=BODY_SIZE, color=BODY)
+        heading("ACTIVITIES")
+        add(_fill(proto["body"], [cv["activities"].strip()]))
 
     doc.save(out_path)
     return out_path

@@ -42,7 +42,7 @@ Remy searches worldwide. Nico covers Germany and Austria. Lina covers the Nether
 
 ![The writer drafts from your real experience, the ATS specialist checks it, findings go back once, the writer fixes once, then the resume passes or is blocked](docs/ats-loop.gif)
 
-Maya fills the resume fields and does not design a second layout. `src/render_cv.py` is the only layout. Every role and every project stays, and a long list continues onto the next sheet. Maya may reorder and reword bullets. Maya may not add a skill, a metric, or a job that was not in your general resume. A gap stays a gap. The visa line appears only on a relocation resume. Marco sends findings once, Maya fixes once, and there is no third draft. A blocked resume is not saved. A recruiter who wrote with no specific opening gets the general resume you already gave.
+Maya fills the resume fields and does not design a second layout. The shape is [`templates/professional.md`](templates/professional.md). `src/render_cv.py` fills [`templates/professional.docx`](templates/professional.docx). Every role and every project stays, and a long list continues onto the next sheet. Maya may reorder and reword bullets. Maya may not add a skill, a metric, or a job that was not in your general resume. A gap stays a gap. The visa line appears only on a relocation resume. Marco sends findings once, Maya fixes once, and there is no third draft. A blocked resume is not saved. A recruiter who wrote with no specific opening gets the general resume you already gave.
 
 ## Which ads get through
 
