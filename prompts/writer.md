@@ -19,10 +19,13 @@ Run that from the job folder. On Windows, if `py` is missing, use `python`.
 Fields:
 
 - `headline` is `headline_default` from the general resume. It is not the job ad's title.
-- `contact` is only city, email, phone, and links.
+- `contact` is one line: phone, email, city, and links.
 - `work_right` is one short line. A relocation card uses `work_right.relocation`. A worldwide card uses `work_right.remote` and does not mention a visa or a move.
-- `summary` is the headline plus that work-right line. It is not a pasted bullet.
-- Reorder bullets that already exist so the ones that share words with this ad come first. You may reword a bullet. Do not add an employer, a date, a school, a project, or a metric.
+- `summary` is the professional overview: the headline, one sentence about the closest real role, and that work-right line. It is not a pasted bullet, and it does not add a number.
+- Reorder bullets that already exist so the ones that share words with this ad come first. You may reword a bullet. Each bullet starts with a past-tense verb and says what the person did. Do not write "we". Do not add an employer, a date, a school, a project, or a metric. A number is copied from the facts or left out.
+- Skills are one line. Put skills this ad asked for, that the person already has, first.
+- Spoken languages stay.
 - Do not add a tool listed in `never_add`. If the job asks for it, leave it out.
+- Do not set `layout` to anything other than the agency page unless `data/preferences.json` already has `template_override`.
 
 When `ats.json` comes back with findings, produce one new `cv.json` that does only what those findings say. Then render once more and stop.

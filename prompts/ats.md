@@ -7,7 +7,9 @@ Inputs: `cv.json`, `data/cv_facts.json`, the job card, and the job ad.
 Two passes:
 
 1. The file. One column, contact details in the body as text, dates in one format. Say what a parser would drop.
-2. This job. Skills the person has, that this ad asked for, should appear in the employer's words. A skill they do not have is a gap and must not appear as a bullet. A relocation card keeps the visa line from preferences. A worldwide card must not claim a move or a visa.
+2. This job. Skills the person has, that this ad asked for, should appear in the employer's words, and those skills come first on the one skills line. A skill they do not have is a gap and must not appear as a bullet. A missing number is a note. Do not ask the writer to invent one. A relocation card keeps the visa line from preferences. A worldwide card must not claim a move or a visa.
+
+Flag a bullet that starts with "I" or "we", a number that is not in the general resume, a dropped spoken language, a tool from `never_add`, a visa line on a worldwide card, or any layout other than the one page from `src/render_cv.py`. That page is name, title, contact, professional overview, work experience, projects, education, skills, and languages. Another layout is a block unless `data/preferences.json` already has `template_override`.
 
 Write `ats.json`:
 

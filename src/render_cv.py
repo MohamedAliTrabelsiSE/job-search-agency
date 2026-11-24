@@ -19,6 +19,39 @@ DARK = RGBColor(0x26, 0x26, 0x26)
 GREY = RGBColor(0x40, 0x40, 0x40)
 MIDGREY = RGBColor(0x59, 0x59, 0x59)
 LINK = RGBColor(0x11, 0x55, 0xCC)
+AGENCY_PAGE = "agency"
+
+
+def page_is_locked(preferences):
+    """True until the person has asked Sami for a different page and that request was saved."""
+    note = ""
+    if isinstance(preferences, dict):
+        note = preferences.get("template_override") or ""
+    return not str(note).strip()
+
+
+def refuse_other_layout(cv, preferences=None):
+    requested = (cv or {}).get("layout") or AGENCY_PAGE
+    if requested != AGENCY_PAGE and page_is_locked(preferences):
+        raise ValueError("This resume page is locked. Tell Sami if you want a different layout.")
+
+
+def _skill_line(tech):
+    parts = []
+    for label, items in tech or []:
+        for bit in str(items).split(","):
+            bit = bit.strip()
+            if bit and bit not in parts:
+                parts.append(bit)
+    return ", ".join(parts)
+
+
+def _role_line(title, company):
+    title = (title or "").strip()
+    company = (company or "").strip()
+    if title and company:
+        return f"{title} | {company}"
+    return title or company
 
 
 def _set_font(run, name="Calibri", size=9.5, bold=False, italic=False, color=None):
@@ -105,14 +138,14 @@ def section_heading(doc, text):
 
 
 def bullet(doc, text, size=11, before=1, after=0, keep=False):
-    p = doc.add_paragraph(style="List Bullet")
+    p = doc.add_paragraph()
     if keep:
         p.paragraph_format.keep_with_next = True
     _spacing(p, before=before, after=after, line=1.0)
     pf = p.paragraph_format
     pf.left_indent = Cm(0.55)
     pf.first_line_indent = Cm(-0.35)
-    r = p.add_run(text)
+    r = p.add_run("• " + text)
     _set_font(r, size=size, color=DARK)
     return p
 
@@ -170,34 +203,30 @@ def build(cv, out_path):
                 r = p.add_run(str(seg))
                 _set_font(r, size=11, color=GREY)
 
-    if (cv.get("work_right") or "").strip():
+    overview = (cv.get("summary") or "").strip() or (cv.get("work_right") or "").strip()
+    if overview:
+        section_heading(doc, "PROFESSIONAL OVERVIEW")
         p = doc.add_paragraph()
-        _spacing(p, before=2, after=0)
-        r = p.add_run(cv["work_right"].strip())
-        _set_font(r, size=11, italic=True, color=GREY)
+        _spacing(p, before=1, after=0, line=1.05)
+        r = p.add_run(overview)
+        _set_font(r, size=11, color=DARK)
 
     if cv.get("experience"):
-        section_heading(doc, "Experience")
+        section_heading(doc, "WORK EXPERIENCE")
         for job in cv["experience"]:
-            _dated_line(doc, job.get("title") or "", job.get("dates") or "")
-            detail = " · ".join(part for part in (job.get("company") or "", job.get("stack") or "") if part)
-            if detail:
-                p = doc.add_paragraph()
-                _spacing(p, before=0, after=1)
-                r = p.add_run(detail)
-                _set_font(r, size=11, italic=True, color=MIDGREY)
-                p.paragraph_format.keep_with_next = True
+            left = _role_line(job.get("title"), job.get("company"))
+            if (job.get("stack") or "").strip():
+                left = f"{left} · {job['stack'].strip()}" if left else job["stack"].strip()
+            _dated_line(doc, left, job.get("dates") or "")
             for i, item in enumerate(job.get("bullets") or []):
                 bullet(doc, item, keep=(i == 0))
 
     if cv.get("projects"):
-        section_heading(doc, "Projects")
+        section_heading(doc, "PROJECTS")
         for proj in cv["projects"]:
             p = doc.add_paragraph()
             _spacing(p, before=8, after=0)
-            label = proj.get("name") or ""
-            if proj.get("stack"):
-                label = f"{label} · {proj['stack']}"
+            label = _role_line(proj.get("name"), proj.get("stack"))
             r = p.add_run(label)
             _set_font(r, size=12, bold=True, color=NAVY)
             if proj.get("link"):
@@ -215,34 +244,27 @@ def build(cv, out_path):
                 bullet(doc, item, keep=(i == 0))
 
     if cv.get("education"):
-        section_heading(doc, "Education")
+        section_heading(doc, "EDUCATION")
         for ed in cv["education"]:
-            _dated_line(doc, ed.get("degree") or "", ed.get("dates") or "")
-            if (ed.get("school") or "").strip():
-                p = doc.add_paragraph()
-                _spacing(p, before=0, after=0)
-                r = p.add_run(ed["school"])
-                _set_font(r, size=11, italic=True, color=MIDGREY)
+            _dated_line(doc, _role_line(ed.get("degree"), ed.get("school")), ed.get("dates") or "")
 
-    if cv.get("tech"):
-        section_heading(doc, "Skills")
-        for label, items in cv["tech"]:
-            p = doc.add_paragraph()
-            _spacing(p, before=1, after=0, line=1.05)
-            r = p.add_run(f"{label}: ")
-            _set_font(r, size=11, bold=True, color=DARK)
-            r = p.add_run(items)
-            _set_font(r, size=11, color=DARK)
+    skills = _skill_line(cv.get("tech"))
+    if skills:
+        section_heading(doc, "SKILLS")
+        p = doc.add_paragraph()
+        _spacing(p, before=1, after=0, line=1.05)
+        r = p.add_run(skills)
+        _set_font(r, size=11, color=DARK)
 
     if (cv.get("languages") or "").strip():
-        section_heading(doc, "Languages")
+        section_heading(doc, "LANGUAGES")
         p = doc.add_paragraph()
         _spacing(p, before=1, after=0)
         r = p.add_run(cv["languages"].strip())
         _set_font(r, size=11, color=DARK)
 
     if (cv.get("activities") or "").strip():
-        section_heading(doc, "Activities")
+        section_heading(doc, "ACTIVITIES")
         p = doc.add_paragraph()
         _spacing(p, before=1, after=0)
         r = p.add_run(cv["activities"].strip())
@@ -270,47 +292,45 @@ def to_text(cv):
         text = _plain_line(line)
         if text:
             lines.append(text)
-    if (cv.get("work_right") or "").strip():
-        lines.append(cv["work_right"].strip())
+    overview = (cv.get("summary") or "").strip() or (cv.get("work_right") or "").strip()
+    if overview:
+        lines.append("")
+        lines.append("PROFESSIONAL OVERVIEW")
+        lines.append(overview)
     lines.append("")
 
     if cv.get("experience"):
-        lines.append("EXPERIENCE")
+        lines.append("WORK EXPERIENCE")
         for job in cv["experience"]:
-            lines.append(f'{job.get("title") or ""}    {job.get("dates") or ""}'.rstrip())
-            detail = " · ".join(part for part in (job.get("company") or "", job.get("stack") or "") if part)
-            if detail:
-                lines.append(detail)
+            left = _role_line(job.get("title"), job.get("company"))
+            if (job.get("stack") or "").strip():
+                left = f"{left} · {job['stack'].strip()}" if left else job["stack"].strip()
+            lines.append(f'{left}    {job.get("dates") or ""}'.rstrip())
             for item in job.get("bullets") or []:
-                lines.append(f"- {item}")
+                lines.append(f"• {item}")
             lines.append("")
 
     if cv.get("projects"):
         lines.append("PROJECTS")
         for proj in cv["projects"]:
             link = f' ({proj["link"][1]})' if proj.get("link") else ""
-            label = proj.get("name") or ""
-            if proj.get("stack"):
-                label = f"{label} · {proj['stack']}"
-            lines.append(f"{label}{link}")
+            lines.append(f"{_role_line(proj.get('name'), proj.get('stack'))}{link}")
             if (proj.get("tagline") or "").strip():
                 lines.append(proj["tagline"])
             for item in proj.get("bullets") or []:
-                lines.append(f"- {item}")
+                lines.append(f"• {item}")
             lines.append("")
 
     if cv.get("education"):
         lines.append("EDUCATION")
         for ed in cv["education"]:
-            lines.append(f'{ed.get("degree") or ""}    {ed.get("dates") or ""}'.rstrip())
-            if (ed.get("school") or "").strip():
-                lines.append(ed["school"])
+            lines.append(f'{_role_line(ed.get("degree"), ed.get("school"))}    {ed.get("dates") or ""}'.rstrip())
             lines.append("")
 
-    if cv.get("tech"):
+    skills = _skill_line(cv.get("tech"))
+    if skills:
         lines.append("SKILLS")
-        for label, items in cv["tech"]:
-            lines.append(f"{label}: {items}")
+        lines.append(skills)
         lines.append("")
 
     if (cv.get("languages") or "").strip():
@@ -359,7 +379,8 @@ def normalize(cv):
     return out
 
 
-def render_files(cv, out_dir):
+def render_files(cv, out_dir, preferences=None):
+    refuse_other_layout(cv, preferences)
     folder = Path(out_dir)
     folder.mkdir(parents=True, exist_ok=True)
     docx_path = folder / "resume.docx"
@@ -379,6 +400,8 @@ if __name__ == "__main__":
         sys.stderr.write("usage: py -3 src/render_cv.py cv.json out_dir\n")
         sys.exit(2)
     payload = json.loads(_Path(sys.argv[1]).read_text(encoding="utf-8"))
-    docx_path, text_path = render_files(payload, sys.argv[2])
+    prefs_path = _Path(__file__).resolve().parents[1] / "data" / "preferences.json"
+    preferences = json.loads(prefs_path.read_text(encoding="utf-8")) if prefs_path.exists() else None
+    docx_path, text_path = render_files(payload, sys.argv[2], preferences)
     print(docx_path)
     print(text_path)

@@ -25,6 +25,50 @@ def _rank(items, target):
     return ordered
 
 
+def _sentence(text):
+    text = (text or "").strip()
+    if not text:
+        return ""
+    if text[-1] not in ".!?":
+        return text + "."
+    return text
+
+
+def _skill_bits(facts):
+    banned = {skill.lower() for skill in facts.get("never_add") or []}
+    bits = []
+    for item in facts.get("tech") or []:
+        items = item["items"] if isinstance(item, dict) else item[1]
+        for bit in str(items).split(","):
+            bit = bit.strip()
+            if bit and bit.lower() not in banned and bit not in bits:
+                bits.append(bit)
+    return bits
+
+
+def _overview(facts, target, right, experience):
+    headline = facts.get("headline_default") or "Software Engineer"
+    match = None
+    for job in experience:
+        blob = " ".join(part for part in (job.get("title"), job.get("company"), job.get("stack")) if part)
+        if _words(blob) & target:
+            match = job
+            break
+    sentences = [_sentence(headline)]
+    if match:
+        place = match["title"]
+        if match.get("company"):
+            place = f"{match['title']} at {match['company']}"
+        line = f"Closest work is {place}"
+        stack = (match.get("stack") or "").strip()
+        if stack:
+            line += f", using {stack}"
+        sentences.append(_sentence(line))
+    if right:
+        sentences.append(_sentence(right))
+    return " ".join(sentences[:3])
+
+
 def draft(facts, preferences, card):
     target = _words(f"{card.get('title') or ''} {card.get('excerpt') or ''}")
     work = preferences.get("work_right") or {}
@@ -64,20 +108,19 @@ def draft(facts, preferences, card):
     links = []
     for link in facts.get("links") or []:
         links.append({"text": link["text"], "url": link["url"]})
-    contact_bits = [part for part in (facts.get("location"), facts.get("email"), facts.get("phone")) if part]
-    contact = [contact_bits] if contact_bits else []
-    if links:
-        contact.append(links)
+    contact = [[part for part in (facts.get("phone"), facts.get("email"), facts.get("location")) if part] + links]
+    contact = [row for row in contact if row]
 
     headline = facts.get("headline_default") or "Software Engineer"
+    skills = _rank(_skill_bits(facts), target)
 
     return {
         "name": facts["name"],
         "headline": headline,
         "contact": contact,
         "work_right": right,
-        "summary": ". ".join(part for part in (headline, right) if part),
-        "tech": facts.get("tech") or [],
+        "summary": _overview(facts, target, right, experience),
+        "tech": [["", ", ".join(skills)]] if skills else [],
         "experience": experience,
         "projects": projects,
         "education": facts.get("education") or [],

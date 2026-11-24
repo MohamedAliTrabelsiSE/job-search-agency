@@ -15,7 +15,7 @@ from merge import merge_cards
 from places import scouts_for
 from rank import rank_cards
 from thread import build_thread
-from render_cv import normalize, to_text
+from render_cv import normalize, page_is_locked, refuse_other_layout, to_text
 from screen import classify_worldwide
 
 FACTS = load_json(ROOT / "config" / "cv_facts.example.json")
@@ -140,6 +140,30 @@ class AgencyTest(unittest.TestCase):
         self.assertLess(text.index("PROJECTS"), text.index("EDUCATION"))
         self.assertLess(text.index("EDUCATION"), text.index("SKILLS"))
         self.assertLess(text.index("SKILLS"), text.index("LANGUAGES"))
+
+    def test_overview_is_not_a_pasted_bullet_and_the_page_stays_locked(self):
+        card = {"path": "worldwide", "title": "Backend Engineer", "excerpt": "TypeScript Node.js REST APIs"}
+        cv = draft(FACTS, PREFS, card)
+        first_bullet = FACTS["experience"][0]["bullets"][0]
+        self.assertNotIn(first_bullet, cv["summary"])
+        self.assertIn(PREFS["work_right"]["remote"], cv["summary"])
+        self.assertNotIn("visa", cv["summary"].lower())
+        text = to_text(normalize(cv))
+        self.assertLess(text.index("PROFESSIONAL OVERVIEW"), text.index("WORK EXPERIENCE"))
+        self.assertLess(text.index("WORK EXPERIENCE"), text.index("PROJECTS"))
+        self.assertLess(text.index("PROJECTS"), text.index("EDUCATION"))
+        self.assertLess(text.index("EDUCATION"), text.index("SKILLS"))
+        self.assertLess(text.index("SKILLS"), text.index("LANGUAGES"))
+        skills = text.split("SKILLS", 1)[1].split("LANGUAGES", 1)[0]
+        self.assertLess(skills.index("TypeScript"), skills.index("Python"))
+        self.assertNotIn("Languages:", text)
+        self.assertTrue(page_is_locked({}))
+        self.assertTrue(page_is_locked({"interest": "both"}))
+        self.assertFalse(page_is_locked({"template_override": "two columns"}))
+        cv["layout"] = "two-column"
+        with self.assertRaises(ValueError):
+            refuse_other_layout(cv, {})
+        refuse_other_layout(cv, {"template_override": "two columns"})
 
     def test_thread_shows_one_reply_from_marco_to_maya(self):
         with tempfile.TemporaryDirectory() as folder:

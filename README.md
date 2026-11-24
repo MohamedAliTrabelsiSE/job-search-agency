@@ -25,7 +25,7 @@ Feedback goes in a [discussion](https://github.com/MohamedAliTrabelsiSE/job-sear
 2. Sami asks for your resume, whether you want remote work or relocation or both, and whether you can legally work that way. Sami reads the resume back and waits.
 3. Ida reads the mail. Remy, Nico, Lina, and Esme search at the same time. They hand back notes. They do not talk to each other.
 4. Repeats, companies you already applied to, and rejections drop out. Theo keeps every remaining ad that shares words with your resume, best first. An ad with no shared words is listed and not drafted.
-5. Maya makes one resume per kept job, from the same facts. Marco checks it once. The page is one column: your headline, then experience, projects, education, skills, and languages.
+5. Maya makes one resume per kept job, from the same facts. Marco checks it once. The page is one column: your name and title, a short overview, then experience, projects, education, skills, and languages.
 6. The run stops. You decide.
 
 ## Who goes looking
