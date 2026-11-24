@@ -243,13 +243,19 @@ def build(cv, out_path):
     saved = _body_paras(doc)
     proto = {
         "name": copy.deepcopy(saved[0]),
+        "after_name": copy.deepcopy(saved[1]),
         "title": copy.deepcopy(saved[2]),
+        "after_title": copy.deepcopy(saved[3]),
+        "before_contact": copy.deepcopy(saved[4]),
         "contact": copy.deepcopy(saved[5]),
+        "after_contact": copy.deepcopy(saved[6]),
+        "before_heading": copy.deepcopy(saved[7]),
         "heading": copy.deepcopy(saved[8]),
         "body": copy.deepcopy(saved[10]),
         "gap": copy.deepcopy(saved[13]),
         "role": copy.deepcopy(saved[14]),
         "bullet": copy.deepcopy(saved[15]),
+        "between": copy.deepcopy(saved[19]),
         "skills": copy.deepcopy(saved[38]),
     }
     _clear_body(doc)
@@ -262,11 +268,16 @@ def build(cv, out_path):
         add(copy.deepcopy(proto["gap"]))
 
     add(_fill(proto["name"], [cv["name"]]))
+    add(copy.deepcopy(proto["after_name"]))
     if cv.get("headline"):
         add(_fill(proto["title"], [cv["headline"]]))
+        add(copy.deepcopy(proto["after_title"]))
+    add(copy.deepcopy(proto["before_contact"]))
     contact = _contact_text(cv)
     if contact:
         add(_fill(proto["contact"], [contact]))
+    add(copy.deepcopy(proto["after_contact"]))
+    add(copy.deepcopy(proto["before_heading"]))
 
     overview = (cv.get("summary") or "").strip() or (cv.get("work_right") or "").strip()
     if overview:
@@ -282,15 +293,19 @@ def build(cv, out_path):
             )))
             for item in job.get("bullets") or []:
                 add(_fill(proto["bullet"], [item]))
+            add(copy.deepcopy(proto["between"]))
 
     if cv.get("projects"):
         heading("PROJECTS")
         for proj in cv["projects"]:
-            add(_fill(proto["role"], [_role_line(proj.get("name"), proj.get("stack"))]))
+            add(_fill(proto["role"], [proj.get("name") or ""]))
+            if (proj.get("stack") or "").strip():
+                add(_fill(proto["body"], [proj["stack"].strip()]))
             if (proj.get("tagline") or "").strip():
                 add(_fill(proto["body"], [proj["tagline"].strip()]))
             for item in proj.get("bullets") or []:
                 add(_fill(proto["bullet"], [item]))
+            add(copy.deepcopy(proto["between"]))
 
     if cv.get("education"):
         heading("EDUCATION")
@@ -303,8 +318,19 @@ def build(cv, out_path):
     skills = _skill_words(cv.get("tech"))
     if skills:
         heading("SKILLS")
-        for start in range(0, len(skills), 3):
-            row = skills[start:start + 3]
+        row = []
+        width = 0
+        rows = []
+        for word in skills:
+            if row and (len(row) == 3 or width + len(word) > 42):
+                rows.append(row)
+                row = []
+                width = 0
+            row.append(word)
+            width += len(word) + 2
+        if row:
+            rows.append(row)
+        for row in rows:
             parts = []
             for index, word in enumerate(row):
                 if index:
