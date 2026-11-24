@@ -1,58 +1,55 @@
 # job-search-agency
 
-A small agency that looks for jobs and then stops. You talk to one lead. The lead sends scouts out, keeps at most three roles, and has a writer and an ATS specialist build a resume for each one. Nothing is emailed and nothing is submitted until you say yes to a specific card.
+A small agency that looks for jobs, then stops and waits for you. You talk to one lead. The lead asks three questions, sends the team out, and comes back with at most three roles. Each role gets its own resume. Nothing is emailed and nothing is submitted until you say yes to a specific one.
 
-Open this repo in Cursor, Claude, Codex, DeepSeek, or anything else that reads [`AGENTS.md`](AGENTS.md). That file is the contract. This page is the map.
+Open this repo in Cursor, Claude, Codex, DeepSeek, or anything else that reads [`AGENTS.md`](AGENTS.md). That file is the contract. This page is the picture.
 
-![One morning: you brief the lead, five workers search together, the merger keeps three cards, the writer and the ATS specialist revise once, then the run stops](docs/how-it-works.gif)
+## A morning
 
-The picture is one morning. The rest of this page is the same story in words.
+![Six steps: you talk to the lead, answer three questions, the inbox and scouts start together, three jobs come back, each gets a resume, then everything stops](docs/how-it-works.gif)
 
-## The team
+1. You talk only to the lead.
+2. The lead asks for your resume, whether you want remote work or relocation or both, and whether you can legally work that way. It reads the resume back and waits.
+3. The inbox and the scouts start together. They hand back notes. They do not talk to each other.
+4. Repeats, companies you already applied to, and rejections drop out. At most three jobs remain.
+5. Each of those jobs gets a resume made from the same facts.
+6. The run stops. You decide.
 
-You never talk to the workers. They do not talk to each other. They leave files, and the lead reads the files.
+## Who goes looking
 
-| Who | Job | Leaves behind |
-| --- | --- | --- |
-| **Lead** | Asks you the interview, starts the morning, shows you the folders | the decision to stop |
-| **Inbox clerk** | Reads mail. Files a rejection. Drafts a reply and does not send it | `data/inbox.json`, names appended to `data/roles.json` |
-| **Worldwide scout** | Full remote you can do from the country you already live in | `data/scout-worldwide.json` |
-| **DACH scout** | Germany and Austria | `data/scout-dach.json` |
-| **Benelux + Ireland scout** | Netherlands, Belgium, Ireland | `data/scout-benelux-ie.json` |
-| **Nordics scout** | Sweden, Denmark, Finland, Norway | `data/scout-nordics.json` |
-| **Merger** | Waits until the workers above have finished. One card per company. Drops duplicates, companies you already applied to, and rejections | `data/shortlist.json`, at most 3 cards |
-| **Writer** | Builds that job's resume from your general one. Same facts, reordered. A gap stays a gap | `outbox/<company>-<title>/cv.json` |
-| **ATS specialist** | Checks that the resume parses and matches the ad. Sends findings to the writer. One revision, one recheck, no third rewrite | `outbox/<company>-<title>/ats.json` |
+![Remote sends a worldwide scout, relocate sends one scout per region, both sends both](docs/who-searches.gif)
 
-The only conversation in the agency is that one pass between the ATS specialist and the writer.
+Germany and Austria share a scout. So do the Netherlands, Belgium, and Ireland. So do Sweden, Denmark, Finland, and Norway. The inbox runs only when you have connected mail. Without that, the search still runs.
 
-A recruiter who wrote with no opening gets the general resume you already provided. A real job gets the resume in that job's folder.
+## How a resume is checked
 
-## Which scouts go out
+![The writer drafts from your real experience, the ATS specialist checks it, findings go back once, the writer fixes once, then the resume passes or is blocked](docs/ats-loop.gif)
 
-Your interest, saved at the interview, decides this. The inbox clerk is separate: it runs only if you connected mail.
+The writer may reorder and reword. It may not add a skill, a metric, or a job that was not in your general resume. A gap stays a gap. The visa line appears only on a relocation resume. The specialist sends findings once, the writer fixes once, and there is no third draft. A blocked resume is not saved. A recruiter who wrote with no specific opening gets the general resume you already gave.
 
-| You said | Who searches |
+## Which ads get through
+
+![Full remote passes work-from-anywhere and a bare remote, and fails a country lock. Relocation passes visa help and fails an existing right-to-work requirement](docs/what-passes.png)
+
+A pass only means the text of the ad got through. It is not permission to apply. Jobs with US hours, or contract-only jobs, stay visible.
+
+## What each one writes
+
+You never talk to the workers. The only reply inside the agency is the one list of findings from the ATS specialist to the writer.
+
+| Who | Writes |
 | --- | --- |
-| Full remote | Worldwide only |
-| Relocate | One regional scout per place you named. Germany and Austria share a scout. So do the Netherlands, Belgium, and Ireland. So do the four Nordics |
-| Both | Worldwide first, then the regional scouts. Both is a normal answer |
-
-Places the agency knows: Germany, Austria, Netherlands, Belgium, Ireland, Sweden, Denmark, Finland, Norway.
-
-## Two ways a job can pass
-
-**Full remote** means any country, including the one you live in now. "Work from anywhere" passes. "Remote, Poland" does not: a country after the word remote is a country lock. A bare "Remote", with no country, still counts.
-
-**Relocation** is for a named place, and only if you need a visa. The ad has to say it sponsors a visa or helps you relocate. "Must already have the right to work" fails. "Unable to offer visa sponsorship" fails too. The word "sponsorship" in a refusal is not an offer.
-
-A pass is not permission to apply. It only means the text of the ad got through. US hours and contract-only roles stay visible. They are not hidden.
+| Inbox | `data/inbox.json`, and rejected companies in `data/roles.json` |
+| Scouts | `data/scout-worldwide.json`, `data/scout-dach.json`, `data/scout-benelux-ie.json`, `data/scout-nordics.json` |
+| Merger | `data/shortlist.json`, at most three cards |
+| Writer | `outbox/<company>-<title>/cv.json` |
+| ATS specialist | `outbox/<company>-<title>/ats.json` |
 
 ## First run
 
 If `data/cv_facts.json` or `data/preferences.json` is missing, the lead stops. No scout runs. It asks, in this order:
 
-1. **Your general resume.** A PDF, a text file, or a paste. It reads only what is written, shows you that reading, and waits for you to correct it. Then it saves `data/cv_facts.json`: contact, education, each role, the bullets you already have, languages, activities, and `never_add` (tools the resume does not claim). It does not invent a metric or a skill.
+1. **Your general resume.** A PDF, a text file, or a paste. It reads only what is written, shows you that reading, and waits for you to correct it. Then it saves `data/cv_facts.json`: contact, education, each role, the bullets you already have, languages, activities, and `never_add` (tools the resume does not claim).
 2. **Your interest.** Full remote from where you already live, relocate, or both. Relocate asks which places. More than one place is normal.
 3. **Work right, in your words.** Relocation: whether you need a visa. Full remote: that you will keep working from your current country. Saved in `data/preferences.json`.
 
@@ -60,7 +57,7 @@ Both files are gitignored. So is your inbox, your skip list, and every resume th
 
 Someone who clones this repo starts with an empty skip list. Your applications are not theirs.
 
-## A morning
+## Run a morning
 
 Search uses Python 3.11 and the standard library. Rendering a resume also needs `python-docx`.
 
@@ -73,16 +70,9 @@ python src/morning.py
 
 On Windows, if `python` is not on PATH, use `py -3` in place of `python`.
 
-`morning.py` refuses to start while the two profile files are missing. After you have confirmed them, it:
+`morning.py` refuses to start while the two profile files are missing. After you have confirmed them, it reads the inbox when `~/.dsh/smtp.txt` exists (an address, then an app password), runs the scouts your answer turned on, merges them, and renders `resume.docx` and `resume.txt` for each resume that passes. Then it prints `Stopped. Nothing was submitted and nothing was sent.`
 
-1. Reads the inbox, only when `~/.dsh/smtp.txt` exists (an address, then an app password) or you pass `--creds`. No credential file means the inbox is skipped and the search still runs. Mail is classified as rejection, acknowledgement, question, or other. Rejections are remembered. Nothing is sent.
-2. Starts the scouts your interest turned on, together.
-3. Merges them into at most three cards.
-4. For each card, drafts a resume, runs the ATS check, revises once, and renders `resume.docx` and `resume.txt` when the check passes. A blocked resume is not rendered.
-
-Then it prints `Stopped. Nothing was submitted and nothing was sent.` and waits for you.
-
-`python src/send.py` exits on purpose. There is no SMTP client in this repository, and no LinkedIn client. Do not add one.
+`python src/send.py` exits on purpose. There is no mail sender in this repository, and no LinkedIn client. Do not add one.
 
 ## Your own boards
 
@@ -94,7 +84,7 @@ python src/discover.py --sources config/sources.example.yaml --rules config/rule
 
 - `ashby`, `lever`, and `greenhouse` are lists of public board tokens.
 - `location_tokens`, `title_allow`, and `seniority_block` are case-insensitive substrings.
-- `cutoff_days` drops older ads. Greenhouse dates are last-updated, not first-published, so that cutoff is only as good as the board's timestamp.
+- `cutoff_days` drops older ads. Greenhouse dates are last-updated, not first-published.
 - A block phrase is masked before offer phrases are searched, so a sentence that refuses a visa is not read as an offer.
 
 To keep a company off the shortlist, create `data/roles.json` (gitignored):
@@ -112,13 +102,8 @@ AGENTS.md          the contract every agent runtime follows
 config/            fictional profile, rules, and board tokens
 prompts/           writer and ATS specialist
 src/morning.py     inbox, then scouts, then merge, then resumes
-src/scout.py       starts only the scouts your interest turned on
-src/inbox.py       reads mail, never sends
-src/merge.py       at most three cards
-src/discover.py    public board APIs
-src/render_cv.py   resume.docx and resume.txt
 src/send.py        refuses
-docs/safety.md     rate limits, terms, and why LinkedIn is absent
+docs/              the diagrams on this page, and safety.md
 data/              gitignored. created on your machine
 outbox/            gitignored resumes, one folder per job
 ```
