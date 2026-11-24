@@ -165,6 +165,17 @@ class AgencyTest(unittest.TestCase):
             refuse_other_layout(cv, {})
         refuse_other_layout(cv, {"template_override": "two columns"})
 
+    def test_draft_keeps_every_project_and_bullet(self):
+        facts = json.loads(json.dumps(FACTS))
+        facts["projects"] = [
+            {"name": f"Project {i}", "bullets": [f"Shipped part {i} in TypeScript."], "stack": "TypeScript"}
+            for i in range(5)
+        ]
+        facts["experience"][0]["bullets"] = [f"Shipped change {i} in TypeScript." for i in range(6)]
+        cv = draft(facts, PREFS, {"path": "worldwide", "title": "Backend Engineer", "excerpt": "TypeScript"})
+        self.assertEqual(len(cv["projects"]), 5)
+        self.assertEqual(len(cv["experience"][0]["bullets"]), 6)
+
     def test_thread_shows_one_reply_from_marco_to_maya(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

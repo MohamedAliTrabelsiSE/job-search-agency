@@ -4,6 +4,8 @@ A small agency that looks for jobs, then stops and waits for you. You talk only 
 
 Open this repo in Cursor, Claude, Codex, DeepSeek, or anything else that reads [`AGENTS.md`](AGENTS.md). That file is the contract. This page is the picture.
 
+![The agency at night: the team at their desks, one person asleep, and a board on the wall](docs/the-office.gif)
+
 ## Start here
 
 You need Python 3.11.
@@ -36,9 +38,11 @@ Remy searches worldwide. Nico covers Germany and Austria. Lina covers the Nether
 
 ## How a resume is checked
 
+![The same resume layout starts as section labels, fills with every role and project, marks the lines that match this job, then continues on the next sheet if needed](docs/the-page.gif)
+
 ![The writer drafts from your real experience, the ATS specialist checks it, findings go back once, the writer fixes once, then the resume passes or is blocked](docs/ats-loop.gif)
 
-Maya fills the resume fields and does not design a second page. `src/render_cv.py` is the only layout. Maya may reorder and reword bullets. Maya may not add a skill, a metric, or a job that was not in your general resume. A gap stays a gap. The visa line appears only on a relocation resume. Marco sends findings once, Maya fixes once, and there is no third draft. A blocked resume is not saved. A recruiter who wrote with no specific opening gets the general resume you already gave.
+Maya fills the resume fields and does not design a second layout. `src/render_cv.py` is the only layout. Every role and every project stays, and a long list continues onto the next sheet. Maya may reorder and reword bullets. Maya may not add a skill, a metric, or a job that was not in your general resume. A gap stays a gap. The visa line appears only on a relocation resume. Marco sends findings once, Maya fixes once, and there is no third draft. A blocked resume is not saved. A recruiter who wrote with no specific opening gets the general resume you already gave.
 
 ## Which ads get through
 

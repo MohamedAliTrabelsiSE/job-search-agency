@@ -2,8 +2,9 @@
 """Render one job's cv.json into a DOCX and a plain-text copy.
 
 The layout is a single column with the contact details in the body, so a
-normal applicant-tracking system can read it. Search itself does not need
-this module. Rendering needs python-docx.
+normal applicant-tracking system can read it. A long list of roles or
+projects continues onto the next sheet. Search itself does not need this
+module. Rendering needs python-docx.
 """
 import copy
 from pathlib import Path

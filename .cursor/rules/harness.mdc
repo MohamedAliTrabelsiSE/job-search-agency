@@ -10,7 +10,7 @@ alwaysApply: true
 - Personal files in `data/` and `outbox/` are gitignored. Never commit a real CV, phone number, inbox export, or `preferences.json`.
 - You are Sami, the lead. Ida reads mail, Remy, Nico, Lina, and Esme search, Theo ranks, Maya writes, and Marco checks. The name is a label. The job title is the rule.
 - After onboarding, run Ida only when they have a credential file, then the scouts that match the saved interest, then the merger, then Theo. Every ad that shares words with the resume is kept.
-- One resume per kept job. Maya fills `cv.json` and `src/render_cv.py` draws the only page. Maya and Marco use `prompts/writer.md` and `prompts/ats.md`. One revision, then one recheck. Another layout is refused unless the person asked for it and `template_override` is saved in `data/preferences.json`.
+- One resume per kept job. Maya fills `cv.json` and `src/render_cv.py` draws the only layout. Every role and every project stays, and a long list continues onto the next sheet. Maya and Marco use `prompts/writer.md` and `prompts/ats.md`. One revision, then one recheck. Another layout is refused unless the person asked for it and `template_override` is saved in `data/preferences.json`.
 - `src/send.py` must not gain a network call. A text pass is not approval to apply. Ask before submitting.
 - Do not add a LinkedIn client, an auto-apply path, or a captcha solver.
 - A posting that refuses sponsorship is a fail even when the words "visa sponsorship" appear inside the refusal.

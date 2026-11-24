@@ -84,7 +84,7 @@ def draft(facts, preferences, card):
             "title": job["title"],
             "dates": job["dates"],
             "company": job["company"],
-            "bullets": bullets[:4] or bullets,
+            "bullets": bullets,
             "stack": job.get("stack") or "",
         })
 
@@ -94,11 +94,11 @@ def draft(facts, preferences, card):
         key=lambda proj: len(_words(" ".join(proj.get("bullets") or [])) & target),
         reverse=True,
     )
-    for proj in ranked_projects[:3]:
+    for proj in ranked_projects:
         item = {
             "name": proj["name"],
             "tagline": proj.get("tagline") or "",
-            "bullets": _rank(list(proj.get("bullets") or []), target)[:3],
+            "bullets": _rank(list(proj.get("bullets") or []), target),
             "stack": proj.get("stack") or "",
         }
         if proj.get("link"):
