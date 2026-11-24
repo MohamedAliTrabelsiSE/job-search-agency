@@ -134,6 +134,7 @@ def main():
     parser.add_argument("--skip", default=str(ROOT / "data" / "roles.json"), help="Applied and rejected companies")
     parser.add_argument("--out", default=str(ROOT / "data" / "candidates.json"))
     parser.add_argument("--content-cap", type=int, default=20, help="Max Greenhouse description fetches")
+    parser.add_argument("--speaker", default="", help="Who is searching, printed on each line")
     args = parser.parse_args()
 
     ensure_ready(ROOT)
@@ -231,11 +232,14 @@ def main():
     by_status = {}
     for c in candidates:
         by_status[c["sponsorship"]] = by_status.get(c["sponsorship"], 0) + 1
-    print(f"boards {len(tasks)}  errors {len(errors)}  candidates {len(candidates)}  {by_status}")
-    print(f"wrote {out}")
+    from names import speak
+
+    who = args.speaker
+    print(speak(who, f"boards {len(tasks)}  errors {len(errors)}  candidates {len(candidates)}  {by_status}"))
+    print(speak(who, f"wrote {out}"))
     for c in candidates:
         if c["sponsorship"] == "offered":
-            print(f"  offered  {c['published']}  {c['company']}  {c['title'][:48]}  {c['location'][:24]}")
+            print(speak(who, f"offered  {c['published']}  {c['company']}  {c['title'][:48]}  {c['location'][:24]}"))
 
 
 if __name__ == "__main__":

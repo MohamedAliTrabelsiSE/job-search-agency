@@ -46,27 +46,55 @@ def _skill_bits(facts):
     return bits
 
 
-def _overview(facts, target, right, experience):
+def _clean_stack(facts, stack):
+    banned = {skill.lower() for skill in facts.get("never_add") or []}
+    kept = []
+    for bit in str(stack or "").split(","):
+        bit = bit.strip()
+        if bit and bit.lower() not in banned and bit not in kept:
+            kept.append(bit)
+    return ", ".join(kept)
+
+
+def _join_names(items):
+    items = [item for item in items if item]
+    if not items:
+        return ""
+    if len(items) == 1:
+        return items[0]
+    return ", ".join(items[:-1]) + ", and " + items[-1]
+
+
+def _overview(facts, target, right, experience, projects):
     headline = facts.get("headline_default") or "Software Engineer"
-    match = None
+    closest = []
+    rest = []
     for job in experience:
         blob = " ".join(part for part in (job.get("title"), job.get("company"), job.get("stack")) if part)
-        if _words(blob) & target:
-            match = job
-            break
-    sentences = [_sentence(headline)]
-    if match:
-        place = match["title"]
-        if match.get("company"):
-            place = f"{match['title']} at {match['company']}"
-        line = f"Closest work is {place}"
-        stack = (match.get("stack") or "").strip()
+        if target and (_words(blob) & target):
+            closest.append(job)
+        else:
+            rest.append(job)
+
+    def role_phrase(job):
+        place = job.get("title") or "a role"
+        if job.get("company"):
+            place = f"{place} at {job['company']}"
+        stack = _clean_stack(facts, job.get("stack"))
         if stack:
-            line += f", using {stack}"
-        sentences.append(_sentence(line))
+            place = f"{place}, using {stack}"
+        return place
+
+    sentences = [_sentence(headline)]
+    roles = [_join_names([role_phrase(job) for job in closest + rest])]
+    if roles[0]:
+        sentences.append(_sentence(f"Work includes {roles[0]}"))
+    names = _join_names([proj.get("name") or "" for proj in projects or []])
+    if names:
+        sentences.append(_sentence(f"Projects include {names}"))
     if right:
         sentences.append(_sentence(right))
-    return " ".join(sentences[:3])
+    return " ".join(sentence for sentence in sentences if sentence)
 
 
 def draft(facts, preferences, card):
@@ -119,7 +147,7 @@ def draft(facts, preferences, card):
         "headline": headline,
         "contact": contact,
         "work_right": right,
-        "summary": _overview(facts, target, right, experience),
+        "summary": _overview(facts, target, right, experience, projects),
         "tech": [["", ", ".join(skills)]] if skills else [],
         "experience": experience,
         "projects": projects,

@@ -16,7 +16,7 @@ from ats_check import findings, revise
 from check_ready import ensure_ready
 from draft_cv import draft
 from load_config import load_json
-from names import ATS, WRITER
+from names import ATS, INBOX, LEAD, RANKER, WRITER
 from render_cv import render_files
 from thread import write_thread
 
@@ -36,15 +36,20 @@ def slug(text):
 
 def main():
     ensure_ready(ROOT)
+    print(f"{INBOX}  reading the mail.", flush=True)
     if _run("inbox.py") not in (0, None):
         return 1
+    print(f"{LEAD}  the scouts are searching.", flush=True)
     if _run("scout.py") not in (0, None):
         return 1
+    print(f"{LEAD}  pooling the jobs.", flush=True)
     if _run("merge.py") not in (0, None):
         return 1
+    print(f"{RANKER}  ranking.", flush=True)
     if _run("rank.py") not in (0, None):
         return 1
 
+    print(f"{WRITER}  drafting.  {ATS}  checking.", flush=True)
     shortlist = load_json(ROOT / "data" / "shortlist.json")
     facts = load_json(ROOT / "data" / "cv_facts.json")
     preferences = load_json(ROOT / "data" / "preferences.json")

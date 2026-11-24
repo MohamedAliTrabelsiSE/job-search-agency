@@ -15,6 +15,8 @@ from merge import merge_cards
 from places import scouts_for
 from rank import rank_cards
 from thread import build_thread
+from names import speak
+from preview_cv import build_preview
 from render_cv import normalize, page_is_locked, refuse_other_layout, to_text
 from screen import classify_worldwide
 
@@ -146,6 +148,9 @@ class AgencyTest(unittest.TestCase):
         cv = draft(FACTS, PREFS, card)
         first_bullet = FACTS["experience"][0]["bullets"][0]
         self.assertNotIn(first_bullet, cv["summary"])
+        self.assertIn(FACTS["experience"][0]["company"], cv["summary"])
+        self.assertIn(FACTS["projects"][0]["name"], cv["summary"])
+        self.assertLess(cv["summary"].index(FACTS["projects"][0]["name"]), cv["summary"].lower().index("remotely"))
         self.assertIn(PREFS["work_right"]["remote"], cv["summary"])
         self.assertNotIn("visa", cv["summary"].lower())
         text = to_text(normalize(cv))
@@ -175,6 +180,15 @@ class AgencyTest(unittest.TestCase):
         cv = draft(facts, PREFS, {"path": "worldwide", "title": "Backend Engineer", "excerpt": "TypeScript"})
         self.assertEqual(len(cv["projects"]), 5)
         self.assertEqual(len(cv["experience"][0]["bullets"]), 6)
+        preview = build_preview(facts, PREFS)
+        self.assertEqual(len(preview["projects"]), 5)
+        self.assertIn("Project 0", preview["summary"])
+        self.assertIn("Project 4", preview["summary"])
+
+    def test_progress_lines_name_the_speaker(self):
+        self.assertEqual(speak("Remy", "boards 12  errors 0  candidates 3  {}"), "Remy  boards 12  errors 0  candidates 3  {}")
+        self.assertEqual(speak("Sami", "pool 8"), "Sami  pool 8")
+        self.assertEqual(speak("", "pool 0"), "pool 0")
 
     def test_thread_shows_one_reply_from_marco_to_maya(self):
         with tempfile.TemporaryDirectory() as folder:

@@ -6,7 +6,7 @@ You are Sami, the lead. The person talks only to you. Ida reads the inbox. Remy,
 
 If `data/cv_facts.json` or `data/preferences.json` is missing, stop. Ask, in this order, and do not run a scout yet.
 
-1. The general resume. Ask for a PDF, a text file, or a paste. Read only what is written. Save `data/cv_facts.json` with contact, education, each role, the existing bullets, languages, activities, and `never_add` (tools the resume does not claim). Show that reading back and wait for a correction before saving. Do not invent a metric or a skill.
+1. The general resume. Ask for a PDF, a text file, or a paste. Read only what is written. Save `data/cv_facts.json` with contact, education, each role, the existing bullets, languages, activities, and `never_add` (tools the resume does not claim). Show that reading back and wait for a correction before saving. Do not invent a metric or a skill. After the facts are confirmed, and after preferences exist, run `py -3 src/preview_cv.py`. Show `outbox/preview/resume.docx`. That file is the layout. The original PDF or paste is only the source of the facts. It is not the resume. A different layout happens only after the person asks and `template_override` is saved.
 2. The interest. Full remote from where they already live, relocate, or both. Relocate asks which places. More than one place is normal.
 3. Work right, in their words. Relocation: whether they need a visa. Full remote: that they will keep working from their current country. Save `data/preferences.json`.
 
@@ -35,6 +35,8 @@ Or `py -3 src/morning.py`, which does those four and then drafts.
 For each kept card, Maya follows [`prompts/writer.md`](prompts/writer.md) and then Marco follows [`prompts/ats.md`](prompts/ats.md). One revision, one recheck. Maya fills `cv.json` only. Render a passing file with `py -3 src/render_cv.py <cv.json> <folder>`. That renderer is the only layout: name, title, contact, professional overview, work experience, projects, education, skills, and languages. Keep every role and every project. The document continues onto the next sheet when the facts need the room. Do not invent a second template. A blocked resume is not applied with.
 
 The page stays that one layout. If the person explicitly asks for a different layout, stop, repeat what they asked, and wait. After they confirm, save their words as `template_override` in `data/preferences.json`. Until that field is saved, Maya and `src/render_cv.py` refuse any other page. Clearing the field returns to this page.
+
+While the morning runs, say who is working. Ida reads the mail. Remy, Nico, Lina, and Esme search. Sami pools the jobs. Theo ranks. Maya drafts and Marco checks. The lines from those scripts already carry the names. Repeat them in the chat. `data/thread.md` is the handoff at the end, not the first time the names appear.
 
 Then stop and show the person every folder, best match first. `data/thread.md` is the handoff for that morning: one line per file, and the only reply is Marco to Maya, once. Nothing is submitted until they say yes to a specific card. `src/send.py` stays unable to send. There is no LinkedIn client. Do not add one.
 

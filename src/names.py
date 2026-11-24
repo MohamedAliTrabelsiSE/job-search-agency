@@ -12,3 +12,10 @@ SCOUTS = {
     "benelux-ie": "Lina",
     "nordics": "Esme",
 }
+
+
+def speak(speaker, text):
+    speaker = (speaker or "").strip()
+    if not speaker:
+        return text
+    return f"{speaker}  {text}"

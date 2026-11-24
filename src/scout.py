@@ -58,7 +58,9 @@ def main():
         ]
         if skip.exists():
             cmd.extend(["--skip", str(skip)])
-        print(f"{SCOUTS.get(name, name)}  {name}", flush=True)
+        speaker = SCOUTS.get(name, name)
+        cmd.extend(["--speaker", speaker])
+        print(f"{speaker}  {name}", flush=True)
         return subprocess.run(cmd).returncode
 
     with ThreadPoolExecutor(max_workers=4) as pool:

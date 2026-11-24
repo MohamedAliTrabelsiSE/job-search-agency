@@ -56,7 +56,9 @@ def main():
     cards = merge_cards(files, roles)
     out = data / "pool.json"
     out.write_text(json.dumps({"count": len(cards), "cards": cards}, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"pool {len(cards)}")
+    from names import LEAD, speak
+
+    print(speak(LEAD, f"pool {len(cards)}"))
     for card in cards:
         print(f"  {card['path']:12} {card['company']}  {card['title'][:48]}")
     print(out)

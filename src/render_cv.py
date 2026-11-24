@@ -15,12 +15,12 @@ from docx.enum.text import WD_TAB_ALIGNMENT
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
-NAVY = RGBColor(0x1F, 0x38, 0x64)
-DARK = RGBColor(0x26, 0x26, 0x26)
-GREY = RGBColor(0x40, 0x40, 0x40)
-MIDGREY = RGBColor(0x59, 0x59, 0x59)
-LINK = RGBColor(0x11, 0x55, 0xCC)
+BLACK = RGBColor(0x00, 0x00, 0x00)
+INK = RGBColor(0x2D, 0x2D, 0x2D)
+BODY = RGBColor(0x43, 0x43, 0x43)
+GRAY = RGBColor(0x66, 0x66, 0x66)
 AGENCY_PAGE = "agency"
+BODY_SIZE = 15
 
 
 def page_is_locked(preferences):
@@ -37,14 +37,18 @@ def refuse_other_layout(cv, preferences=None):
         raise ValueError("This resume page is locked. Tell Sami if you want a different layout.")
 
 
-def _skill_line(tech):
+def _skill_words(tech):
     parts = []
     for label, items in tech or []:
         for bit in str(items).split(","):
             bit = bit.strip()
             if bit and bit not in parts:
                 parts.append(bit)
-    return ", ".join(parts)
+    return parts
+
+
+def _skill_line(tech):
+    return ", ".join(_skill_words(tech))
 
 
 def _role_line(title, company):
@@ -79,7 +83,7 @@ def _spacing(p, before=0, after=0, line=None):
         pf.line_spacing = line
 
 
-def _bottom_border(p, color="1F3864", size=8):
+def _bottom_border(p, color="2D2D2D", size=6):
     pPr = p._p.get_or_add_pPr()
     pbdr = OxmlElement("w:pBdr")
     bottom = OxmlElement("w:bottom")
@@ -91,7 +95,7 @@ def _bottom_border(p, color="1F3864", size=8):
     pPr.append(pbdr)
 
 
-def add_hyperlink(paragraph, text, url, size=9.5, bold=False, color=LINK, underline=False):
+def add_hyperlink(paragraph, text, url, size=BODY_SIZE, bold=False, color=(0x43, 0x43, 0x43), underline=False):
     part = paragraph.part
     r_id = part.relate_to(
         url,
@@ -132,7 +136,7 @@ def section_heading(doc, text):
     p = doc.add_paragraph()
     _spacing(p, before=12, after=4)
     r = p.add_run(text)
-    _set_font(r, size=12, bold=True, color=NAVY)
+    _set_font(r, name="Garamond", size=BODY_SIZE, bold=True, color=BLACK)
     _bottom_border(p)
     p.paragraph_format.keep_with_next = True
     return p
@@ -146,8 +150,10 @@ def bullet(doc, text, size=11, before=1, after=0, keep=False):
     pf = p.paragraph_format
     pf.left_indent = Cm(0.55)
     pf.first_line_indent = Cm(-0.35)
-    r = p.add_run("• " + text)
-    _set_font(r, size=size, color=DARK)
+    mark = p.add_run("● ")
+    _set_font(mark, name="Arial", size=13, color=BODY)
+    r = p.add_run(text)
+    _set_font(r, name="Calibri", size=BODY_SIZE, color=BODY)
     return p
 
 
@@ -156,10 +162,10 @@ def _dated_line(doc, left, right):
     _spacing(p, before=8, after=0)
     p.paragraph_format.tab_stops.add_tab_stop(Cm(17.6), WD_TAB_ALIGNMENT.RIGHT)
     r = p.add_run(left)
-    _set_font(r, size=12, bold=True, color=NAVY)
+    _set_font(r, name="Calibri", size=BODY_SIZE, color=INK)
     if right:
         r = p.add_run("\t" + right)
-        _set_font(r, size=11, color=MIDGREY)
+        _set_font(r, name="Calibri", size=BODY_SIZE, color=GRAY)
     p.paragraph_format.keep_with_next = True
     return p
 
@@ -176,33 +182,33 @@ def build(cv, out_path):
 
     style = doc.styles["Normal"]
     style.font.name = "Calibri"
-    style.font.size = Pt(11)
+    style.font.size = Pt(BODY_SIZE)
     style.paragraph_format.space_after = Pt(0)
     style.paragraph_format.space_before = Pt(0)
 
     p = doc.add_paragraph()
     _spacing(p, before=0, after=1)
     r = p.add_run(cv["name"])
-    _set_font(r, size=22, bold=True, color=NAVY)
+    _set_font(r, name="Garamond", size=40, color=BLACK)
 
     if cv.get("headline"):
         p = doc.add_paragraph()
         _spacing(p, before=0, after=2)
         r = p.add_run(cv["headline"])
-        _set_font(r, size=12, color=NAVY)
+        _set_font(r, name="Georgia", size=16, italic=True, color=GRAY)
 
     for line in cv.get("contact") or []:
         p = doc.add_paragraph()
         _spacing(p, before=0, after=0)
         for j, seg in enumerate(line):
             if j:
-                sep = p.add_run("  |  ")
-                _set_font(sep, size=11, color=MIDGREY)
+                sep = p.add_run(" | ")
+                _set_font(sep, name="Calibri", size=BODY_SIZE, color=GRAY)
             if isinstance(seg, tuple) and seg[0] == "link":
-                add_hyperlink(p, seg[1], seg[2], size=11)
+                add_hyperlink(p, seg[1], seg[2], size=BODY_SIZE, color=(0x43, 0x43, 0x43))
             else:
                 r = p.add_run(str(seg))
-                _set_font(r, size=11, color=GREY)
+                _set_font(r, name="Calibri", size=BODY_SIZE, color=BODY)
 
     overview = (cv.get("summary") or "").strip() or (cv.get("work_right") or "").strip()
     if overview:
@@ -210,15 +216,12 @@ def build(cv, out_path):
         p = doc.add_paragraph()
         _spacing(p, before=1, after=0, line=1.05)
         r = p.add_run(overview)
-        _set_font(r, size=11, color=DARK)
+        _set_font(r, name="Calibri", size=BODY_SIZE, color=BODY)
 
     if cv.get("experience"):
         section_heading(doc, "WORK EXPERIENCE")
         for job in cv["experience"]:
-            left = _role_line(job.get("title"), job.get("company"))
-            if (job.get("stack") or "").strip():
-                left = f"{left} · {job['stack'].strip()}" if left else job["stack"].strip()
-            _dated_line(doc, left, job.get("dates") or "")
+            _dated_line(doc, _role_line(job.get("title"), job.get("company")), job.get("dates") or "")
             for i, item in enumerate(job.get("bullets") or []):
                 bullet(doc, item, keep=(i == 0))
 
@@ -229,17 +232,17 @@ def build(cv, out_path):
             _spacing(p, before=8, after=0)
             label = _role_line(proj.get("name"), proj.get("stack"))
             r = p.add_run(label)
-            _set_font(r, size=12, bold=True, color=NAVY)
+            _set_font(r, name="Calibri", size=BODY_SIZE, color=INK)
             if proj.get("link"):
                 sep = p.add_run("   ")
-                _set_font(sep, size=11)
-                add_hyperlink(p, proj["link"][0], proj["link"][1], size=11)
+                _set_font(sep, name="Calibri", size=BODY_SIZE, color=GRAY)
+                add_hyperlink(p, proj["link"][0], proj["link"][1], size=BODY_SIZE, color=(0x43, 0x43, 0x43))
             p.paragraph_format.keep_with_next = True
             if (proj.get("tagline") or "").strip():
                 p = doc.add_paragraph()
                 _spacing(p, before=0, after=1)
                 r = p.add_run(proj["tagline"])
-                _set_font(r, size=11, italic=True, color=MIDGREY)
+                _set_font(r, name="Calibri", size=BODY_SIZE, italic=True, color=GRAY)
                 p.paragraph_format.keep_with_next = True
             for i, item in enumerate(proj.get("bullets") or []):
                 bullet(doc, item, keep=(i == 0))
@@ -249,27 +252,31 @@ def build(cv, out_path):
         for ed in cv["education"]:
             _dated_line(doc, _role_line(ed.get("degree"), ed.get("school")), ed.get("dates") or "")
 
-    skills = _skill_line(cv.get("tech"))
+    skills = _skill_words(cv.get("tech"))
     if skills:
         section_heading(doc, "SKILLS")
-        p = doc.add_paragraph()
-        _spacing(p, before=1, after=0, line=1.05)
-        r = p.add_run(skills)
-        _set_font(r, size=11, color=DARK)
+        for start in range(0, len(skills), 3):
+            row = skills[start:start + 3]
+            p = doc.add_paragraph()
+            _spacing(p, before=1, after=0, line=1.05)
+            p.paragraph_format.tab_stops.add_tab_stop(Cm(5.8), WD_TAB_ALIGNMENT.LEFT)
+            p.paragraph_format.tab_stops.add_tab_stop(Cm(11.6), WD_TAB_ALIGNMENT.LEFT)
+            r = p.add_run("\t".join(row))
+            _set_font(r, name="Calibri", size=BODY_SIZE, color=BODY)
 
     if (cv.get("languages") or "").strip():
         section_heading(doc, "LANGUAGES")
         p = doc.add_paragraph()
         _spacing(p, before=1, after=0)
         r = p.add_run(cv["languages"].strip())
-        _set_font(r, size=11, color=DARK)
+        _set_font(r, name="Calibri", size=BODY_SIZE, color=BODY)
 
     if (cv.get("activities") or "").strip():
         section_heading(doc, "ACTIVITIES")
         p = doc.add_paragraph()
         _spacing(p, before=1, after=0)
         r = p.add_run(cv["activities"].strip())
-        _set_font(r, size=11, color=DARK)
+        _set_font(r, name="Calibri", size=BODY_SIZE, color=BODY)
 
     doc.save(out_path)
     return out_path
@@ -304,8 +311,6 @@ def to_text(cv):
         lines.append("WORK EXPERIENCE")
         for job in cv["experience"]:
             left = _role_line(job.get("title"), job.get("company"))
-            if (job.get("stack") or "").strip():
-                left = f"{left} · {job['stack'].strip()}" if left else job["stack"].strip()
             lines.append(f'{left}    {job.get("dates") or ""}'.rstrip())
             for item in job.get("bullets") or []:
                 lines.append(f"• {item}")

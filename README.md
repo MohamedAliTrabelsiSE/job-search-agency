@@ -67,7 +67,7 @@ You never talk to the workers. The only reply inside the agency is Marco's list 
 
 If `data/cv_facts.json` or `data/preferences.json` is missing, Sami stops. No scout runs. It asks, in this order:
 
-1. **Your general resume.** A PDF, a text file, or a paste. It reads only what is written, shows you that reading, and waits for you to correct it. Then it saves `data/cv_facts.json`: contact, education, each role, the bullets you already have, languages, activities, and `never_add` (tools the resume does not claim).
+1. **Your general resume.** A PDF, a text file, or a paste. It reads only what is written, shows you that reading, and waits for you to correct it. Then it saves `data/cv_facts.json`: contact, education, each role, the bullets you already have, languages, activities, and `never_add` (tools the resume does not claim). After you confirm, it renders `outbox/preview/resume.docx` in the locked layout. That file is the resume. The file you uploaded is only the source of the facts.
 2. **Your interest.** Full remote from where you already live, relocate, or both. Relocate asks which places. More than one place is normal.
 3. **Work right, in your words.** Relocation: whether you need a visa. Full remote: that you will keep working from your current country. Saved in `data/preferences.json`.
 
