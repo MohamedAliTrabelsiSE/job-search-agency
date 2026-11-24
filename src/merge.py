@@ -1,7 +1,7 @@
 """One card per company, after every scout and the inbox clerk have finished.
 
 Keeps text-pass roles only. Drops a company that was already applied to or
-that already sent a rejection. Returns at most three cards.
+that already sent a rejection. The ranker, not this step, decides order.
 """
 
 import json
@@ -23,7 +23,7 @@ def blocked_companies(roles):
     return {str(name).lower() for name in names}
 
 
-def merge_cards(scout_files, roles, limit=3):
+def merge_cards(scout_files, roles, limit=None):
     blocked = blocked_companies(roles or {})
     seen = set()
     cards = []
@@ -42,7 +42,7 @@ def merge_cards(scout_files, roles, limit=3):
             card["path"] = path_kind
             card["scout"] = region
             cards.append(card)
-            if len(cards) >= limit:
+            if limit is not None and len(cards) >= limit:
                 return cards
     return cards
 
@@ -53,10 +53,10 @@ def main():
     files = sorted(data.glob("scout-*.json"))
     roles_path = data / "roles.json"
     roles = load_json(roles_path) if roles_path.exists() else {}
-    cards = merge_cards(files, roles, limit=3)
-    out = data / "shortlist.json"
+    cards = merge_cards(files, roles)
+    out = data / "pool.json"
     out.write_text(json.dumps({"count": len(cards), "cards": cards}, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"shortlist {len(cards)}")
+    print(f"pool {len(cards)}")
     for card in cards:
         print(f"  {card['path']:12} {card['company']}  {card['title'][:48]}")
     print(out)

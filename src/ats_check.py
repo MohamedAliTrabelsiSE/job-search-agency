@@ -54,12 +54,13 @@ def revise(cv, issues):
         job["bullets"] = [bullet for bullet in job.get("bullets") or [] if not dirty(bullet)]
     for proj in out.get("projects") or []:
         proj["bullets"] = [bullet for bullet in proj.get("bullets") or [] if not dirty(bullet)]
-    if dirty(out.get("summary")):
-        kept = []
-        for sentence in re.split(r"(?<=[.])\s+", out.get("summary") or ""):
-            if sentence and not dirty(sentence):
-                kept.append(sentence)
-        out["summary"] = " ".join(kept)
+    for field in ("summary", "work_right"):
+        if dirty(out.get(field)):
+            kept = []
+            for sentence in re.split(r"(?<=[.])\s+", out.get(field) or ""):
+                if sentence and not dirty(sentence):
+                    kept.append(sentence)
+            out[field] = " ".join(kept)
     if dirty(json.dumps(out.get("contact"))):
         cleaned = []
         for line in out.get("contact") or []:

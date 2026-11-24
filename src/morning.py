@@ -1,7 +1,7 @@
 """One morning wave. Stops before any application or email is sent.
 
 Order: inbox clerk (if credentials exist), the scouts for this interest,
-merger, then one resume per shortlisted job. The writer pass is
+merger, ranker, then one resume per matching job. The writer pass is
 src/draft_cv.py. The ATS pass is src/ats_check.py, with one revision.
 """
 
@@ -40,6 +40,8 @@ def main():
         return 1
     if _run("merge.py") not in (0, None):
         return 1
+    if _run("rank.py") not in (0, None):
+        return 1
 
     shortlist = load_json(ROOT / "data" / "shortlist.json")
     facts = load_json(ROOT / "data" / "cv_facts.json")
@@ -67,7 +69,7 @@ def main():
             print(f"blocked {card['company']} {card['title'][:40]}")
             continue
         render_files(cv, folder)
-        print(f"ready {folder}")
+        print(f"ready {card.get('score', '')} {card.get('why', '')} {folder}")
 
     print("Stopped. Nothing was submitted and nothing was sent.")
     return 0

@@ -10,8 +10,7 @@ from pathlib import Path
 
 from docx import Document
 from docx.shared import Pt, Cm, RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
-from docx.enum.section import WD_SECTION
+from docx.enum.text import WD_TAB_ALIGNMENT
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
@@ -58,13 +57,6 @@ def _bottom_border(p, color="1F3864", size=8):
     pPr.append(pbdr)
 
 
-def _letter_spacing(run, twips=24):
-    rpr = run._element.get_or_add_rPr()
-    sp = OxmlElement("w:spacing")
-    sp.set(qn("w:val"), str(twips))
-    rpr.append(sp)
-
-
 def add_hyperlink(paragraph, text, url, size=9.5, bold=False, color=LINK, underline=False):
     part = paragraph.part
     r_id = part.relate_to(
@@ -104,27 +96,15 @@ def add_hyperlink(paragraph, text, url, size=9.5, bold=False, color=LINK, underl
 
 def section_heading(doc, text):
     p = doc.add_paragraph()
-    _spacing(p, before=9, after=4)
-    r = p.add_run(text.upper())
-    _set_font(r, size=10.5, bold=True, color=NAVY)
-    _letter_spacing(r, 26)
+    _spacing(p, before=12, after=4)
+    r = p.add_run(text)
+    _set_font(r, size=12, bold=True, color=NAVY)
     _bottom_border(p)
     p.paragraph_format.keep_with_next = True
     return p
 
 
-def kv_line(doc, parts, size=10, before=4, after=0):
-    """parts: list of (text, bold, italic, color)."""
-    p = doc.add_paragraph()
-    _spacing(p, before=before, after=after)
-    for text, bold, italic, color in parts:
-        r = p.add_run(text)
-        _set_font(r, size=size, bold=bold, italic=italic, color=color)
-    p.paragraph_format.keep_with_next = True
-    return p
-
-
-def bullet(doc, text, size=9.5, before=1, after=0, keep=False):
+def bullet(doc, text, size=11, before=1, after=0, keep=False):
     p = doc.add_paragraph(style="List Bullet")
     if keep:
         p.paragraph_format.keep_with_next = True
@@ -134,6 +114,19 @@ def bullet(doc, text, size=9.5, before=1, after=0, keep=False):
     pf.first_line_indent = Cm(-0.35)
     r = p.add_run(text)
     _set_font(r, size=size, color=DARK)
+    return p
+
+
+def _dated_line(doc, left, right):
+    p = doc.add_paragraph()
+    _spacing(p, before=8, after=0)
+    p.paragraph_format.tab_stops.add_tab_stop(Cm(17.6), WD_TAB_ALIGNMENT.RIGHT)
+    r = p.add_run(left)
+    _set_font(r, size=12, bold=True, color=NAVY)
+    if right:
+        r = p.add_run("\t" + right)
+        _set_font(r, size=11, color=MIDGREY)
+    p.paragraph_format.keep_with_next = True
     return p
 
 
@@ -149,195 +142,188 @@ def build(cv, out_path):
 
     style = doc.styles["Normal"]
     style.font.name = "Calibri"
-    style.font.size = Pt(9.5)
+    style.font.size = Pt(11)
     style.paragraph_format.space_after = Pt(0)
     style.paragraph_format.space_before = Pt(0)
 
-    # ---------- header ----------
     p = doc.add_paragraph()
     _spacing(p, before=0, after=1)
     r = p.add_run(cv["name"])
-    _set_font(r, size=23, bold=True, color=NAVY)
+    _set_font(r, size=22, bold=True, color=NAVY)
 
-    p = doc.add_paragraph()
-    _spacing(p, before=0, after=3)
-    r = p.add_run(cv["headline"])
-    _set_font(r, size=12, color=NAVY)
+    if cv.get("headline"):
+        p = doc.add_paragraph()
+        _spacing(p, before=0, after=2)
+        r = p.add_run(cv["headline"])
+        _set_font(r, size=12, color=NAVY)
 
-    for i, line in enumerate(cv["contact"]):
+    for line in cv.get("contact") or []:
         p = doc.add_paragraph()
         _spacing(p, before=0, after=0)
         for j, seg in enumerate(line):
             if j:
                 sep = p.add_run("  |  ")
-                _set_font(sep, size=9, color=MIDGREY)
+                _set_font(sep, size=11, color=MIDGREY)
             if isinstance(seg, tuple) and seg[0] == "link":
-                add_hyperlink(p, seg[1], seg[2], size=9)
+                add_hyperlink(p, seg[1], seg[2], size=11)
             else:
-                r = p.add_run(seg)
-                _set_font(r, size=9, color=GREY)
+                r = p.add_run(str(seg))
+                _set_font(r, size=11, color=GREY)
 
-    # ---------- summary ----------
-    if cv.get("summary"):
-        section_heading(doc, "Summary")
+    if (cv.get("work_right") or "").strip():
         p = doc.add_paragraph()
-        _spacing(p, before=0, after=0, line=1.05)
-        r = p.add_run(cv["summary"])
-        _set_font(r, size=9.5, color=DARK)
+        _spacing(p, before=2, after=0)
+        r = p.add_run(cv["work_right"].strip())
+        _set_font(r, size=11, italic=True, color=GREY)
 
-    # ---------- languages & technologies ----------
-    section_heading(doc, "Languages & Technologies")
-    for label, items in cv["tech"]:
-        p = doc.add_paragraph()
-        _spacing(p, before=1, after=0, line=1.0)
-        pf = p.paragraph_format
-        pf.left_indent = Cm(3.05)
-        pf.first_line_indent = Cm(-3.05)
-        pf.tab_stops.add_tab_stop(Cm(3.05))
-        r = p.add_run(label)
-        _set_font(r, size=9.5, color=DARK)
-        r = p.add_run("\t")
-        _set_font(r, size=9.5, color=DARK)
-        r = p.add_run(items)
-        _set_font(r, size=9.5, color=DARK)
+    if cv.get("experience"):
+        section_heading(doc, "Experience")
+        for job in cv["experience"]:
+            _dated_line(doc, job.get("title") or "", job.get("dates") or "")
+            detail = " · ".join(part for part in (job.get("company") or "", job.get("stack") or "") if part)
+            if detail:
+                p = doc.add_paragraph()
+                _spacing(p, before=0, after=1)
+                r = p.add_run(detail)
+                _set_font(r, size=11, italic=True, color=MIDGREY)
+                p.paragraph_format.keep_with_next = True
+            for i, item in enumerate(job.get("bullets") or []):
+                bullet(doc, item, keep=(i == 0))
 
-    # ---------- experience ----------
-    section_heading(doc, "Experience")
-    for job in cv["experience"]:
-        kv_line(
-            doc,
-            [
-                (job["title"], True, False, NAVY),
-                ("  ", False, False, DARK),
-                (job["dates"], False, False, MIDGREY),
-            ],
-            size=10,
-            before=6,
-        )
-        p = doc.add_paragraph()
-        _spacing(p, before=0, after=1)
-        r = p.add_run(job["company"])
-        _set_font(r, size=9.5, italic=True, color=MIDGREY)
-        p.paragraph_format.keep_with_next = True
-        for i, b in enumerate(job["bullets"]):
-            bullet(doc, b, keep=(i == 0))
-        if job.get("stack"):
+    if cv.get("projects"):
+        section_heading(doc, "Projects")
+        for proj in cv["projects"]:
             p = doc.add_paragraph()
-            _spacing(p, before=1, after=0)
-            r = p.add_run("Stack: " + job["stack"])
-            _set_font(r, size=8.5, italic=True, color=MIDGREY)
+            _spacing(p, before=8, after=0)
+            label = proj.get("name") or ""
+            if proj.get("stack"):
+                label = f"{label} · {proj['stack']}"
+            r = p.add_run(label)
+            _set_font(r, size=12, bold=True, color=NAVY)
+            if proj.get("link"):
+                sep = p.add_run("   ")
+                _set_font(sep, size=11)
+                add_hyperlink(p, proj["link"][0], proj["link"][1], size=11)
+            p.paragraph_format.keep_with_next = True
+            if (proj.get("tagline") or "").strip():
+                p = doc.add_paragraph()
+                _spacing(p, before=0, after=1)
+                r = p.add_run(proj["tagline"])
+                _set_font(r, size=11, italic=True, color=MIDGREY)
+                p.paragraph_format.keep_with_next = True
+            for i, item in enumerate(proj.get("bullets") or []):
+                bullet(doc, item, keep=(i == 0))
 
-    # ---------- projects ----------
-    section_heading(doc, "Projects")
-    for proj in cv["projects"]:
-        p = doc.add_paragraph()
-        _spacing(p, before=5, after=0)
-        r = p.add_run(proj["name"])
-        _set_font(r, size=10, bold=True, color=NAVY)
-        if proj.get("link"):
-            sep = p.add_run("   ")
-            _set_font(sep, size=9)
-            add_hyperlink(p, proj["link"][0], proj["link"][1], size=8.5)
-        p.paragraph_format.keep_with_next = True
-        p = doc.add_paragraph()
-        _spacing(p, before=0, after=1)
-        r = p.add_run(proj["tagline"])
-        _set_font(r, size=9.5, italic=True, color=MIDGREY)
-        p.paragraph_format.keep_with_next = True
-        for i, b in enumerate(proj["bullets"]):
-            bullet(doc, b, keep=(i == 0))
-        if proj.get("stack"):
+    if cv.get("education"):
+        section_heading(doc, "Education")
+        for ed in cv["education"]:
+            _dated_line(doc, ed.get("degree") or "", ed.get("dates") or "")
+            if (ed.get("school") or "").strip():
+                p = doc.add_paragraph()
+                _spacing(p, before=0, after=0)
+                r = p.add_run(ed["school"])
+                _set_font(r, size=11, italic=True, color=MIDGREY)
+
+    if cv.get("tech"):
+        section_heading(doc, "Skills")
+        for label, items in cv["tech"]:
             p = doc.add_paragraph()
-            _spacing(p, before=1, after=0)
-            r = p.add_run("Stack: " + proj["stack"])
-            _set_font(r, size=8.5, italic=True, color=MIDGREY)
+            _spacing(p, before=1, after=0, line=1.05)
+            r = p.add_run(f"{label}: ")
+            _set_font(r, size=11, bold=True, color=DARK)
+            r = p.add_run(items)
+            _set_font(r, size=11, color=DARK)
 
-    # ---------- education ----------
-    section_heading(doc, "Education")
-    for ed in cv["education"]:
-        kv_line(
-            doc,
-            [
-                (ed["degree"], True, False, NAVY),
-                ("  ", False, False, DARK),
-                (ed["dates"], False, False, MIDGREY),
-            ],
-            size=10,
-            before=5,
-        )
+    if (cv.get("languages") or "").strip():
+        section_heading(doc, "Languages")
         p = doc.add_paragraph()
-        _spacing(p, before=0, after=0)
-        r = p.add_run(ed["school"])
-        _set_font(r, size=9.5, italic=True, color=MIDGREY)
+        _spacing(p, before=1, after=0)
+        r = p.add_run(cv["languages"].strip())
+        _set_font(r, size=11, color=DARK)
 
-    # ---------- languages & activities ----------
-    section_heading(doc, "Languages and Activities")
-    p = doc.add_paragraph()
-    _spacing(p, before=2, after=1)
-    r = p.add_run("Languages: ")
-    _set_font(r, size=9.5, color=DARK)
-    r = p.add_run(cv["languages"])
-    _set_font(r, size=9.5, color=DARK)
-    p = doc.add_paragraph()
-    _spacing(p, before=0, after=0)
-    r = p.add_run("Activities: ")
-    _set_font(r, size=9.5, color=DARK)
-    r = p.add_run(cv["activities"])
-    _set_font(r, size=9.5, color=DARK)
+    if (cv.get("activities") or "").strip():
+        section_heading(doc, "Activities")
+        p = doc.add_paragraph()
+        _spacing(p, before=1, after=0)
+        r = p.add_run(cv["activities"].strip())
+        _set_font(r, size=11, color=DARK)
 
     doc.save(out_path)
     return out_path
 
 
+def _plain_line(line):
+    parts = []
+    for seg in line:
+        if isinstance(seg, tuple) and seg[0] == "link":
+            parts.append(f"{seg[1]}: {seg[2]}")
+        else:
+            parts.append(str(seg))
+    return " | ".join(part for part in parts if part)
+
+
 def to_text(cv):
-    L = []
-    L.append(cv["name"].upper())
-    L.append(cv["headline"])
-    for line in cv["contact"]:
-        parts = []
-        for seg in line:
-            if isinstance(seg, tuple) and seg[0] == "link":
-                parts.append(f'{seg[1]}: {seg[2]}')
-            else:
-                parts.append(seg)
-        L.append(" | ".join(parts))
-    L.append("")
-    if cv.get("summary"):
-        L.append("SUMMARY")
-        L.append(cv["summary"])
-        L.append("")
-    L.append("LANGUAGES & TECHNOLOGIES")
-    for label, items in cv["tech"]:
-        L.append(f"{label}: {items}")
-    L.append("")
-    L.append("EXPERIENCE")
-    for job in cv["experience"]:
-        L.append(f'{job["title"]} | {job["dates"]}')
-        L.append(job["company"])
-        for b in job["bullets"]:
-            L.append(f"- {b}")
-        if job.get("stack"):
-            L.append(f'Stack: {job["stack"]}')
-        L.append("")
-    L.append("PROJECTS")
-    for proj in cv["projects"]:
-        link = f' ({proj["link"][1]})' if proj.get("link") else ""
-        L.append(f'{proj["name"]}{link}')
-        L.append(proj["tagline"])
-        for b in proj["bullets"]:
-            L.append(f"- {b}")
-        if proj.get("stack"):
-            L.append(f'Stack: {proj["stack"]}')
-        L.append("")
-    L.append("EDUCATION")
-    for ed in cv["education"]:
-        L.append(f'{ed["degree"]} | {ed["dates"]}')
-        L.append(ed["school"])
-        L.append("")
-    L.append("LANGUAGES AND ACTIVITIES")
-    L.append("Languages: " + cv["languages"])
-    L.append("Activities: " + cv["activities"])
-    return "\n".join(L)
+    lines = [cv["name"].upper()]
+    if cv.get("headline"):
+        lines.append(cv["headline"])
+    for line in cv.get("contact") or []:
+        text = _plain_line(line)
+        if text:
+            lines.append(text)
+    if (cv.get("work_right") or "").strip():
+        lines.append(cv["work_right"].strip())
+    lines.append("")
+
+    if cv.get("experience"):
+        lines.append("EXPERIENCE")
+        for job in cv["experience"]:
+            lines.append(f'{job.get("title") or ""}    {job.get("dates") or ""}'.rstrip())
+            detail = " · ".join(part for part in (job.get("company") or "", job.get("stack") or "") if part)
+            if detail:
+                lines.append(detail)
+            for item in job.get("bullets") or []:
+                lines.append(f"- {item}")
+            lines.append("")
+
+    if cv.get("projects"):
+        lines.append("PROJECTS")
+        for proj in cv["projects"]:
+            link = f' ({proj["link"][1]})' if proj.get("link") else ""
+            label = proj.get("name") or ""
+            if proj.get("stack"):
+                label = f"{label} · {proj['stack']}"
+            lines.append(f"{label}{link}")
+            if (proj.get("tagline") or "").strip():
+                lines.append(proj["tagline"])
+            for item in proj.get("bullets") or []:
+                lines.append(f"- {item}")
+            lines.append("")
+
+    if cv.get("education"):
+        lines.append("EDUCATION")
+        for ed in cv["education"]:
+            lines.append(f'{ed.get("degree") or ""}    {ed.get("dates") or ""}'.rstrip())
+            if (ed.get("school") or "").strip():
+                lines.append(ed["school"])
+            lines.append("")
+
+    if cv.get("tech"):
+        lines.append("SKILLS")
+        for label, items in cv["tech"]:
+            lines.append(f"{label}: {items}")
+        lines.append("")
+
+    if (cv.get("languages") or "").strip():
+        lines.append("LANGUAGES")
+        lines.append(cv["languages"].strip())
+        lines.append("")
+
+    if (cv.get("activities") or "").strip():
+        lines.append("ACTIVITIES")
+        lines.append(cv["activities"].strip())
+        lines.append("")
+
+    return "\n".join(lines).rstrip() + "\n"
 
 
 def normalize(cv):

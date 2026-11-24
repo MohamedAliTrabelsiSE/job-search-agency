@@ -22,16 +22,18 @@ Run, and wait for each step:
 py -3 src/inbox.py
 py -3 src/scout.py
 py -3 src/merge.py
+py -3 src/rank.py
 ```
 
-Or `py -3 src/morning.py`, which does those three and then drafts.
+Or `py -3 src/morning.py`, which does those four and then drafts.
 
 - The inbox clerk runs only when a credential file exists (`~/.dsh/smtp.txt`, address then app password, or `--creds`). It never sends. Rejections go into `data/roles.json`.
 - `src/scout.py` starts only the scouts that match the interest, at the same time from your point of view: worldwide, and one regional scout per saved place (Germany and Austria, Benelux and Ireland, Nordics).
-- `src/merge.py` keeps one card per company, drops `applied` and `rejected`, and leaves at most three text-pass cards in `data/shortlist.json`.
+- `src/merge.py` keeps one card per company, drops `applied` and `rejected`, and writes every text-pass card to `data/pool.json`.
+- `src/rank.py` follows [`prompts/rank.md`](prompts/rank.md). Every card that shares words with the resume stays, best first, in `data/shortlist.json`. A card with no shared words is listed as skipped and gets no resume.
 
-For each card, follow [`prompts/writer.md`](prompts/writer.md) and then [`prompts/ats.md`](prompts/ats.md). One revision, one recheck. Render a passing `cv.json` with `py -3 src/render_cv.py <cv.json> <folder>`. A blocked resume is not applied with.
+For each kept card, follow [`prompts/writer.md`](prompts/writer.md) and then [`prompts/ats.md`](prompts/ats.md). One revision, one recheck. The writer fills `cv.json` only. Render a passing file with `py -3 src/render_cv.py <cv.json> <folder>`. That renderer is the only page. Do not invent a second template. A blocked resume is not applied with.
 
-Then stop and show the person at most three folders. Nothing is submitted until they say yes to a specific card. `src/send.py` stays unable to send. There is no LinkedIn client. Do not add one.
+Then stop and show the person every folder, best match first. Nothing is submitted until they say yes to a specific card. `src/send.py` stays unable to send. There is no LinkedIn client. Do not add one.
 
 A recruiter with no specific opening gets the general resume they already provided. A real job gets the resume in that job's folder.

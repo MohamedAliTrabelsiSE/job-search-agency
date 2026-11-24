@@ -64,24 +64,19 @@ def draft(facts, preferences, card):
     links = []
     for link in facts.get("links") or []:
         links.append({"text": link["text"], "url": link["url"]})
-    contact = [
-        [f"{facts.get('location') or ''}  |  {right}".strip(" |")],
-        [facts.get("email") or "", facts.get("phone") or ""],
-    ]
+    contact_bits = [part for part in (facts.get("location"), facts.get("email"), facts.get("phone")) if part]
+    contact = [contact_bits] if contact_bits else []
     if links:
         contact.append(links)
 
-    lead = ""
-    for job in experience:
-        if job["bullets"]:
-            lead = job["bullets"][0]
-            break
+    headline = facts.get("headline_default") or "Software Engineer"
 
     return {
         "name": facts["name"],
-        "headline": card.get("title") or facts.get("headline_default") or "Software Engineer",
+        "headline": headline,
         "contact": contact,
-        "summary": " ".join(part for part in (lead, right) if part),
+        "work_right": right,
+        "summary": ". ".join(part for part in (headline, right) if part),
         "tech": facts.get("tech") or [],
         "experience": experience,
         "projects": projects,

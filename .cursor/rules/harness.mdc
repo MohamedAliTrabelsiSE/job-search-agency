@@ -8,8 +8,8 @@ alwaysApply: true
 - If `data/cv_facts.json` or `data/preferences.json` is missing, ask for the general resume and whether they want full remote, relocation to named places, or both. Stop there. Do not search.
 - Show the resume reading back and wait for a correction before saving it. Do not invent employers, dates, metrics, or skills.
 - Personal files in `data/` and `outbox/` are gitignored. Never commit a real CV, phone number, inbox export, or `preferences.json`.
-- After onboarding, run the inbox clerk only when they have a credential file, then the scouts that match the saved interest, then the merger.
-- One resume per job. The writer and the ATS specialist use `prompts/writer.md` and `prompts/ats.md`. One revision, then one recheck.
+- After onboarding, run the inbox clerk only when they have a credential file, then the scouts that match the saved interest, then the merger, then the ranker. Every ad that shares words with the resume is kept.
+- One resume per kept job. The writer fills `cv.json` and `src/render_cv.py` draws the only page. The writer and the ATS specialist use `prompts/writer.md` and `prompts/ats.md`. One revision, then one recheck.
 - `src/send.py` must not gain a network call. A text pass is not approval to apply. Ask before submitting.
 - Do not add a LinkedIn client, an auto-apply path, or a captcha solver.
 - A posting that refuses sponsorship is a fail even when the words "visa sponsorship" appear inside the refusal.
