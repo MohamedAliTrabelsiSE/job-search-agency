@@ -22,12 +22,23 @@ def _has(title, phrases):
     return any(p.lower() in low for p in phrases)
 
 
-def title_ok(title, rules):
-    return _has(title, rules.get("title_allow") or [])
+def title_ok(title, rules, description=''):
+    normalized=re.sub(r'[-–—]+',' ',title.lower())
+    if re.search(r'\b(?:recruiter|business developer|sales development)\b',normalized):
+        return False
+    aliases=(r'\b(?:web|software|application|platform|product|mobile|frontend|front end|backend|back end|full stack|fullstack)\b.*\b(?:engineer|developer)\b|'
+             r'\b(?:node\.?js|javascript|typescript|python|java|golang|go|react|flutter)\s+(?:engineer|developer)\b')
+    if re.search(aliases,normalized) or _has(title,rules.get('title_allow') or []):
+        return True
+    return bool(re.fullmatch(r'(?:junior |senior )?(?:engineer|developer)',normalized.strip()) and
+                re.search(r'\b(?:software|programming|typescript|python|javascript|backend)\b',description,re.I))
 
 
 def seniority_blocked(title, rules):
-    return _has(title, rules.get("seniority_block") or [])
+    phrases=list(rules.get('seniority_block') or [])
+    if 'intern' in phrases:
+        phrases.append('internship')
+    return any(re.search(r'(?<!\w)'+re.escape(p)+r'(?!\w)',title,re.I) for p in phrases)
 
 
 def location_ok(location, rules):

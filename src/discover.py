@@ -23,6 +23,7 @@ from check_ready import ensure_ready
 from network import fetch
 from eligibility import assess
 from state import write_json
+from ad_text import structured_text
 from screen import (
     classify_sponsorship,
     classify_worldwide,
@@ -61,6 +62,8 @@ def board_jobs(platform, slug):
                 "url": job.get("jobUrl") or job.get("applyUrl") or "",
                 "published": (job.get("publishedAt") or "")[:10],
                 "description": job.get("descriptionPlain") or "",
+                "is_remote": job.get('isRemote'),
+                "structured_locations": [job.get('location')]+extra,
             })
         return jobs
     if platform == "lever":
@@ -77,6 +80,7 @@ def board_jobs(platform, slug):
                 "location": (job.get("categories") or {}).get("location") or "",
                 "url": job.get("hostedUrl") or "",
                 "published": published.isoformat() if published else "",
+                "is_remote": job.get('workplaceType') == 'remote',
                 "description": (job.get("descriptionPlain") or job.get("description") or "") + '\n' + '\n'.join(
                     str(section.get('text') or '') + '\n' + str(section.get('content') or '')
                     for section in job.get('lists') or []) + '\n' + (job.get('additionalPlain') or job.get('additional') or ''),
@@ -124,11 +128,9 @@ def skipped_companies(path):
 
 
 def keep(job, rules, today=None):
-    if not title_ok(job["title"], rules):
+    if not title_ok(job["title"], rules, job.get('description') or ''):
         return False
     if seniority_blocked(job["title"], rules):
-        return False
-    if not location_ok(job["location"], rules):
         return False
     if not within_cutoff(job["published"], rules, today=today):
         return False
@@ -178,9 +180,10 @@ def discover(sources, rules, preferences, skip=(), content_cap=None, board_reade
         if key in seen:
             continue
         seen.add(key)
-        text = plain(job.get('description') or '')
+        raw = job.get('description') or ''
+        text = structured_text(raw)
         path = 'worldwide' if rules.get('mode') == 'worldwide' else 'relocation'
-        card = dict(job, description=text, excerpt=text[:900], path=path,
+        card = dict(job, description_raw=raw, description=text, excerpt=plain(text)[:900], path=path,
                     retrieved_at=datetime.now(timezone.utc).isoformat())
         card['eligibility'] = assess(card, preferences, path)
         card['sponsorship'] = {'eligible':'offered','excluded':'blocked'}.get(card['eligibility']['status'],'unknown')
