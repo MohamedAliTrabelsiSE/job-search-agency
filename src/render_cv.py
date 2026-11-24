@@ -230,6 +230,36 @@ def _contact_text(cv):
     return "  |  ".join(bits)
 
 
+def _header_name(name):
+    """Capitals, with a normal space between words. Letter-spacing makes a long name overflow."""
+    return " ".join(word for word in (name or "").split() if word).upper()
+
+
+def _replace_first_text(paragraphs, new_text):
+    for paragraph in paragraphs:
+        for run in paragraph.runs:
+            node = run._element.find(qn("w:t"))
+            if node is not None and (node.text or "").strip():
+                node.text = new_text
+                return True
+    return False
+
+
+def _apply_frame(doc, cv):
+    """The template keeps a sample name in the header and a sample line in the footer."""
+    spaced = _header_name(cv.get("name") or "")
+    contact = _contact_text(cv)
+    for section in doc.sections:
+        headers = (section.header, section.first_page_header, section.even_page_header)
+        footers = (section.footer, section.first_page_footer, section.even_page_footer)
+        for part in headers:
+            if part is not None and spaced:
+                _replace_first_text(part.paragraphs, spaced)
+        for part in footers:
+            if part is not None and contact:
+                _replace_first_text(part.paragraphs, contact)
+
+
 def _dated_parts(left, right):
     if (right or "").strip():
         return [left, "\t", right]
@@ -346,6 +376,7 @@ def build(cv, out_path):
         heading("ACTIVITIES")
         add(_fill(proto["body"], [cv["activities"].strip()]))
 
+    _apply_frame(doc, cv)
     doc.save(out_path)
     return out_path
 

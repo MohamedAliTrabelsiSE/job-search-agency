@@ -2,6 +2,8 @@
 
 This is the map of `templates/professional.docx`. Fill `cv.json`, then run `src/render_cv.py`. Do not turn this file into the resume, and do not copy the sample words below.
 
+The header is the name in capitals, with a normal space between words. The body starts under that.
+
 Name
 
 *Professional title*

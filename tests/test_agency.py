@@ -17,7 +17,7 @@ from rank import rank_cards
 from thread import build_thread
 from names import speak
 from preview_cv import build_preview
-from render_cv import normalize, page_is_locked, refuse_other_layout, to_text
+from render_cv import _header_name, normalize, page_is_locked, refuse_other_layout, to_text
 from screen import classify_worldwide
 
 FACTS = load_json(ROOT / "config" / "cv_facts.example.json")
@@ -184,6 +184,10 @@ class AgencyTest(unittest.TestCase):
         self.assertEqual(len(preview["projects"]), 5)
         self.assertIn("Project 0", preview["summary"])
         self.assertIn("Project 4", preview["summary"])
+
+    def test_header_name_has_no_letter_spacing(self):
+        self.assertEqual(_header_name("Hana Wrighton"), "HANA WRIGHTON")
+        self.assertEqual(_header_name("Mohamed Ali Trabelsi"), "MOHAMED ALI TRABELSI")
 
     def test_progress_lines_name_the_speaker(self):
         self.assertEqual(speak("Remy", "boards 12  errors 0  candidates 3  {}"), "Remy  boards 12  errors 0  candidates 3  {}")

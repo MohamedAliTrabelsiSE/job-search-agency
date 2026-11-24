@@ -23,7 +23,7 @@ Fields:
 - `contact` is one line: phone, email, city, and links.
 - `work_right` is one short line. A relocation card uses `work_right.relocation`. A worldwide card uses `work_right.remote` and does not mention a visa or a move.
 - `summary` is a professional overview paragraph. The headline is the first sentence. The next sentence names the roles, companies, and stacks already on the resume, with the closest role first when this job matches one. The other roles stay. One sentence names the projects already on the resume. The work-right line is last. It is not a pasted bullet, and it does not add a number. An overview that is only the headline and the work-right line is too short.
-- Keep every role, every bullet, and every project. Put the ones that share words with this ad first. You may reword a bullet. Each bullet starts with a past-tense verb and says what the person did. Do not write "we". Do not add an employer, a date, a school, a project, or a metric. A number is copied from the facts or left out. Do not drop a project to fit one sheet. The same layout continues onto the next sheet.
+- Keep every role and every project. Put the ones that share words with this ad first. You may reword the bullets of a role or a project so this job reads clearly. Each bullet starts with a past-tense verb and says what the person did. Do not write "we". Do not add an employer, a date, a school, or a project. A number is copied from the facts or left out. Do not drop a project to fit one sheet. The same layout continues onto the next sheet.
 - Skills stay in the order of the map: three across, the ones this ad asked for and the person already has first.
 - Spoken languages stay.
 - Do not add a tool listed in `never_add`. If the job asks for it, leave it out.
