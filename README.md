@@ -3,6 +3,9 @@
 A local job-search assistant: find openings, explain eligibility and skill gaps,
 prepare truthful resumes, then stop for the person's decision.
 
+**Release:** [v0.3.0](https://github.com/MohamedAliTrabelsiSE/job-search-agency/releases/tag/v0.3.0)
+— [what changed](CHANGELOG.md). Existing users should review the upgrade notes.
+
 ![The agency](docs/the-office.gif)
 
 Sami is your contact. Ida reads mail; Remy, Nico, Lina and Esme search; Theo ranks;
@@ -22,8 +25,9 @@ python src/demo.py --root tmp/demo
 On Windows use `py -3`, or `.venv\Scripts\python.exe` if the launcher is unavailable.
 The demo uses a fictional candidate and jobs. It makes no network requests, reads
 no mail, and submits nothing. Add `--no-render` to test decisions without a PDF
-converter. Follow [manual acceptance](docs/manual-testing.md) before merging this
-branch or publishing it. [Implementation plan](docs/implementation-plan.md).
+converter. Use the [manual checks](docs/manual-testing.md) to verify your setup.
+Contributors should complete them before merging or publishing changes.
+[Implementation plan](docs/implementation-plan.md).
 
 ## Onboarding
 
