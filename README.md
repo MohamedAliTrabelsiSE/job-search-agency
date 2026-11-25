@@ -1,3 +1,5 @@
+![The agency: Sami and the team at work](docs/the-office.gif)
+
 # job-search-agency
 
 A local job-search assistant: find openings, explain eligibility and skill gaps,
@@ -52,6 +54,13 @@ archives profile/history without deleting earlier resumes. Never commit a real C
 
 ## A search
 
+<picture>
+  <source media="(prefers-reduced-motion: reduce)" srcset="docs/search-routing-static.png">
+  <img src="docs/search-routing.gif" alt="Remote selects Remy; relocation selects matching regional scouts; both combines the routes. Source health and search coverage remain visible." width="1120" loading="lazy">
+</picture>
+
+[Static guide: how preferences choose the scouts](docs/search-routing-static.png).
+
 ```powershell
 python src/morning.py --skip-inbox
 ```
@@ -78,6 +87,13 @@ deterministic overlap heuristics, not probabilities or employer assessments.
 | needs_verification | Eligibility, requirements or experience evidence is unresolved; no resume yet |
 | excluded | Explicit incompatibility, substantial experience gap, missing essential expertise, or no technical overlap |
 
+<picture>
+  <source media="(prefers-reduced-motion: reduce)" srcset="docs/job-decisions-static.png">
+  <img src="docs/job-decisions.gif" alt="Job assessment checks country restrictions, essential expertise, required and preferred skills, and alternatives. Recommended or stretch jobs can get a resume; uncertain and excluded jobs do not." width="1120" loading="lazy">
+</picture>
+
+[Static guide: why a job is recommended, held, or excluded](docs/job-decisions-static.png).
+
 Required, preferred and one-of alternatives retain section evidence. Preferred
 skills never become mandatory just because they say "experience with". A two-year
 candidate meets a two-year minimum, may stretch to three, and is excluded for
@@ -92,6 +108,13 @@ Legacy `roles.json` company exclusions remain supported. New application history
 uses job URLs, so one duplicate opening need not suppress all future company jobs.
 
 ## Resumes
+
+<picture>
+  <source media="(prefers-reduced-motion: reduce)" srcset="docs/cv-generation-static.png">
+  <img src="docs/cv-generation.gif" alt="Confirmed facts feed Maya's tailored draft. Marco checks claims and coverage, with one revision and recheck. Only a passing draft renders to PDF and DOCX in the approved layout." width="1120" loading="lazy">
+</picture>
+
+[Static guide: CV generation and factual review](docs/cv-generation-static.png).
 
 The renderer fills `templates/professional.docx`. All roles, projects, source
 bullets, education and spoken languages stay. Automated bullets are copied from
@@ -163,7 +186,8 @@ and the offline demo on Windows and Linux. Local PDF rendering and visual review
 remain separate acceptance checks. Private JSON, SQLite history, outbox files and
 temporary page images are gitignored.
 
-The README artwork is generated from [a small rendering script](tools/render_readme_animation.py).
+The workflow artwork is generated from [the overview renderer](tools/render_readme_animation.py)
+and [the focused guide renderer](tools/render_detail_animations.py).
 See [visual asset notes](docs/visuals.md) to regenerate it; Pillow is optional and
 is not required to run the job-search pipeline.
 
