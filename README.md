@@ -6,7 +6,12 @@ prepare truthful resumes, then stop for the person's decision.
 **Release:** [v0.3.0](https://github.com/MohamedAliTrabelsiSE/job-search-agency/releases/tag/v0.3.0)
 — [what changed](CHANGELOG.md). Existing users should review the upgrade notes.
 
-![The agency](docs/the-office.gif)
+<picture>
+  <source media="(prefers-reduced-motion: reduce)" srcset="docs/workflow-overview.png">
+  <img src="docs/workflow.gif" alt="Five stages: confirm your profile, search with selected scouts, assess eligibility and fit, draft and check truthful resumes, then stop for your review. Uncertain or excluded jobs receive no application resume." width="1120">
+</picture>
+
+[View the static workflow overview](docs/workflow-overview.png).
 
 Sami is your contact. Ida reads mail; Remy, Nico, Lina and Esme search; Theo ranks;
 Maya drafts and Marco checks. The names label workflow stages. The core pipeline
@@ -157,6 +162,10 @@ Tests use fictional facts and injected public-API fixtures. CI runs logic tests
 and the offline demo on Windows and Linux. Local PDF rendering and visual review
 remain separate acceptance checks. Private JSON, SQLite history, outbox files and
 temporary page images are gitignored.
+
+The README artwork is generated from [a small rendering script](tools/render_readme_animation.py).
+See [visual asset notes](docs/visuals.md) to regenerate it; Pillow is optional and
+is not required to run the job-search pipeline.
 
 Repo [skills](skills/job-research/SKILL.md) are routed by AGENTS.md; they are not
 installed globally by this project. Keep [manual test results](docs/manual-testing.md)
