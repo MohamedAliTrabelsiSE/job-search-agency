@@ -1,4 +1,4 @@
-# User acceptance: test the local branch before merging
+# Manual checks: verify an installation or review a change
 
 Run from the repository root in PowerShell. Use `.venv\Scripts\python.exe`
 if `py -3` is unavailable. The fictional demo uses `tmp/`, reads no mail,
@@ -11,9 +11,11 @@ git branch --show-current
 .\.venv\Scripts\python.exe -X utf8 -m unittest discover -s tests -p "test_*.py"
 ```
 
-Expected branch: `codex/evidence-based-job-workflow`. Tests must pass.
-CI is configured for Windows and Linux; remote CI results are not implied by a
-local run. Do not merge if either platform fails after you choose to push.
+For a v0.3.0 installation, use `master` or the `v0.3.0` release tag. For a proposed
+change, use the development branch under review. A tag checkout has no current
+branch name. Tests must pass in either case.
+CI runs on Windows and Linux; remote CI results are not implied by a local run.
+Contributors must resolve failures before merging or publishing a change.
 
 For the latest assessment fixes, run this focused check as well:
 
