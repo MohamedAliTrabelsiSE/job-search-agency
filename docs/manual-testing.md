@@ -11,7 +11,7 @@ git branch --show-current
 .\.venv\Scripts\python.exe -X utf8 -m unittest discover -s tests -p "test_*.py"
 ```
 
-For a v0.3.0 installation, use `master` or the `v0.3.0` release tag. For a proposed
+For a v0.3.1 installation, use `master` or the `v0.3.1` release tag. For a proposed
 change, use the development branch under review. A tag checkout has no current
 branch name. Tests must pass in either case.
 CI runs on Windows and Linux; remote CI results are not implied by a local run.

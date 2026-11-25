@@ -1,5 +1,32 @@
 # Changelog
 
+## [v0.3.1](https://github.com/MohamedAliTrabelsiSE/job-search-agency/releases/tag/v0.3.1) — 2026-11-25
+
+An early public release for feedback. Includes the complete v0.3.0 workflow plus
+the README improvements below; application behavior is unchanged from v0.3.0.
+
+### Changed
+
+- Keep the original office animation as the first thing visitors see.
+- Restore dark/gold story diagrams: document handoffs, CV filling and continuation,
+  factual review, job decisions, and the original remote/relocate/both selector.
+- Update animation wording to reflect confirmation, eligibility and expertise
+  checks, one revision/recheck, blocked output, and matching PDF/DOCX content.
+- Add static alternatives and optional reproducible artwork tooling.
+- Explain early-public-release expectations: local operation, private candidate
+  files, manual review, and no automatic application submission.
+
+### Upgrade and validation
+
+- From v0.3.0: no profile or history migration; update the checkout or download
+  this release to receive the current README and animations.
+- From v0.2.0: follow the v0.3.0 upgrade instructions below, including review and
+  confirmation of private facts/preferences.
+- Automated tests and the offline demo cover logic; PDF layout inspection and
+  review of real job eligibility remain separate checks.
+
+[Compare v0.3.0…v0.3.1](https://github.com/MohamedAliTrabelsiSE/job-search-agency/compare/v0.3.0...v0.3.1)
+
 ## [v0.3.0](https://github.com/MohamedAliTrabelsiSE/job-search-agency/releases/tag/v0.3.0) — 2026-11-25
 
 ### Added

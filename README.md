@@ -5,8 +5,13 @@
 A local job-search assistant: find openings, explain eligibility and skill gaps,
 prepare truthful resumes, then stop for the person's decision.
 
-**Release:** [v0.3.0](https://github.com/MohamedAliTrabelsiSE/job-search-agency/releases/tag/v0.3.0)
+**Early public release:** [v0.3.1](https://github.com/MohamedAliTrabelsiSE/job-search-agency/releases/tag/v0.3.1)
 — [what changed](CHANGELOG.md). Existing users should review the upgrade notes.
+
+This project is in active development, and early-user feedback is welcome. It runs
+locally and prepares application files; you review the full job ad, verify uncertain
+eligibility, inspect the resume, and decide whether to apply. Nothing is submitted
+automatically. Keep your personal files private.
 
 <picture>
   <source media="(prefers-reduced-motion: reduce)" srcset="docs/how-it-works-static.png">
