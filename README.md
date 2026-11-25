@@ -9,11 +9,11 @@ prepare truthful resumes, then stop for the person's decision.
 — [what changed](CHANGELOG.md). Existing users should review the upgrade notes.
 
 <picture>
-  <source media="(prefers-reduced-motion: reduce)" srcset="docs/workflow-overview.png">
-  <img src="docs/workflow.gif" alt="Five stages: confirm your profile, search with selected scouts, assess eligibility and fit, draft and check truthful resumes, then stop for your review. Uncertain or excluded jobs receive no application resume." width="1120">
+  <source media="(prefers-reduced-motion: reduce)" srcset="docs/how-it-works-static.png">
+  <img src="docs/how-it-works.gif" alt="A morning: talk to Sami, confirm your facts and preferences, run the selected team, assess eligibility and fit, draft and check, then stop for your review." width="1080">
 </picture>
 
-[View the static workflow overview](docs/workflow-overview.png).
+[View the static workflow story](docs/how-it-works-static.png).
 
 Sami is your contact. Ida reads mail; Remy, Nico, Lina and Esme search; Theo ranks;
 Maya drafts and Marco checks. The names label workflow stages. The core pipeline
@@ -55,11 +55,11 @@ archives profile/history without deleting earlier resumes. Never commit a real C
 ## A search
 
 <picture>
-  <source media="(prefers-reduced-motion: reduce)" srcset="docs/search-routing-static.png">
-  <img src="docs/search-routing.gif" alt="Remote selects Remy; relocation selects matching regional scouts; both combines the routes. Source health and search coverage remain visible." width="1120" loading="lazy">
+  <source media="(prefers-reduced-motion: reduce)" srcset="docs/who-searches-static.png">
+  <img src="docs/who-searches.gif" alt="Remote selects the worldwide scout, relocation selects matching regional scouts, and both combines the routes. Mail is optional." width="1080" loading="lazy">
 </picture>
 
-[Static guide: how preferences choose the scouts](docs/search-routing-static.png).
+[Static guide: how preferences choose the scouts](docs/who-searches-static.png).
 
 ```powershell
 python src/morning.py --skip-inbox
@@ -89,7 +89,7 @@ deterministic overlap heuristics, not probabilities or employer assessments.
 
 <picture>
   <source media="(prefers-reduced-motion: reduce)" srcset="docs/job-decisions-static.png">
-  <img src="docs/job-decisions.gif" alt="Job assessment checks country restrictions, essential expertise, required and preferred skills, and alternatives. Recommended or stretch jobs can get a resume; uncertain and excluded jobs do not." width="1120" loading="lazy">
+  <img src="docs/job-decisions.gif" alt="The full job ad moves into assessment: country restrictions, essential expertise, required and preferred skills, and alternatives. Recommended or stretch jobs can get a resume; uncertain and excluded jobs do not." width="1080" loading="lazy">
 </picture>
 
 [Static guide: why a job is recommended, held, or excluded](docs/job-decisions-static.png).
@@ -110,11 +110,18 @@ uses job URLs, so one duplicate opening need not suppress all future company job
 ## Resumes
 
 <picture>
-  <source media="(prefers-reduced-motion: reduce)" srcset="docs/cv-generation-static.png">
-  <img src="docs/cv-generation.gif" alt="Confirmed facts feed Maya's tailored draft. Marco checks claims and coverage, with one revision and recheck. Only a passing draft renders to PDF and DOCX in the approved layout." width="1120" loading="lazy">
+  <source media="(prefers-reduced-motion: reduce)" srcset="docs/the-page-static.png">
+  <img src="docs/the-page.gif" alt="The approved CV page fills with confirmed facts, highlights relevant claims, and continues onto another sheet when needed. Every role and project stays; PDF and DOCX have the same content." width="1080" loading="lazy">
 </picture>
 
-[Static guide: CV generation and factual review](docs/cv-generation-static.png).
+[Static guide: how the CV fills](docs/the-page-static.png).
+
+<picture>
+  <source media="(prefers-reduced-motion: reduce)" srcset="docs/ats-loop-static.png">
+  <img src="docs/ats-loop.gif" alt="Maya's draft moves to Marco for factual checks. Findings return once, Maya revises once, and Marco rechecks. Passing drafts render; remaining failures stay blocked." width="1080" loading="lazy">
+</picture>
+
+[Static guide: the factual review loop](docs/ats-loop-static.png).
 
 The renderer fills `templates/professional.docx`. All roles, projects, source
 bullets, education and spoken languages stay. Automated bullets are copied from
@@ -186,8 +193,7 @@ and the offline demo on Windows and Linux. Local PDF rendering and visual review
 remain separate acceptance checks. Private JSON, SQLite history, outbox files and
 temporary page images are gitignored.
 
-The workflow artwork is generated from [the overview renderer](tools/render_readme_animation.py)
-and [the focused guide renderer](tools/render_detail_animations.py).
+The workflow story diagrams are generated from [the story renderer](tools/render_story_animations.py).
 See [visual asset notes](docs/visuals.md) to regenerate it; Pillow is optional and
 is not required to run the job-search pipeline.
 

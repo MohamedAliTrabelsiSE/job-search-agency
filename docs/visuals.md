@@ -1,30 +1,27 @@
 # README visuals
 
-The original `the-office.gif` is the first item in the README. It introduces the
-team visually; the workflow overview follows the project introduction.
+The README uses the original dark/gold story style: documents move between
+participants, the CV fills with source-backed content, and highlights direct
+attention to the next step. The office animation is still the first item.
 
-`workflow.gif` explains the current workflow in five stages: confirmed profile,
-selected scouts, evidence-based assessment, drafting/checking, then user review.
-It loops over 20 seconds at 1120 × 650. Text stays stationary during each stage;
-only a progress packet and bar move. There are no text crossfades or flashing.
+## Active assets
 
-`workflow-overview.png` summarizes the same steps without animation. The README
-offers it through a reduced-motion picture source and a direct static-image link.
+- `the-office.gif`: original office scene, unchanged.
+- `how-it-works.gif`: six scenes following Sami, confirmed onboarding, selected
+  scouts, evidence-based fit, drafting/checking, and the stop for user review.
+- `who-searches.gif`: original remote/relocate/both selector, unchanged.
+- `the-page.gif`: the approved CV fills, relevant claims rise, and long content
+  continues onto another sheet. PDF and DOCX retain the same content.
+- `ats-loop.gif`: Maya hands the draft to Marco; findings return once, Maya fixes
+  once, and Marco rechecks. The filename is historical: this is a factual check,
+  not an employer's ATS simulation.
+- `job-decisions.gif`: an ad enters country, expertise and requirement assessment,
+  then receives a supported decision or a verification hold/exclusion.
 
-Both overview assets come from `tools/render_readme_animation.py`.
-
-Three additional guides explain the important decisions in more detail:
-
-- `cv-generation.gif`: confirmed facts, Maya's draft, Marco's factual checks and
-  the passing PDF/DOCX output. Failed checks stay blocked after one revision loop.
-- `job-decisions.gif`: explicit country restrictions, essential expertise,
-  required/preferred/one-of skills, and the four possible outcomes.
-- `search-routing.gif`: remote, relocation, both, and honest coverage reporting.
-
-Each focused guide has four scenes over 16 seconds and a `*-static.png` companion
-showing all its scenes. They come from `tools/render_detail_animations.py` and use
-the same visual style as the overview. No real profile, job, contact detail, or
-application appears in the generated artwork.
+The four updated story diagrams loop over 8–12 seconds. Text stays still within
+each scene while documents move; there are no text crossfades or flashing. Each
+guide has a `*-static.png` companion showing every scene. The README supplies
+reduced-motion sources and direct static links. No private candidate data appears.
 
 ## Regenerate
 
@@ -32,18 +29,20 @@ From the repository root, with an optional artwork dependency:
 
 ```powershell
 python -m pip install Pillow
-python tools/render_readme_animation.py
-python tools/render_detail_animations.py
+python tools/render_story_animations.py
 ```
 
 Use `.venv\Scripts\python.exe` on Windows if needed. The renderer uses Segoe UI on
-Windows, DejaVu Sans on Linux, or Arial on macOS. Different fonts can change text
-spacing; inspect every scene after regenerating. Edit the scene text and
-graphics in the script instead of making manual changes to the generated images.
-`--output PATH` renders to a separate review folder.
+Windows, DejaVu Sans on Linux, or Arial on macOS. Font differences can affect text
+spacing; inspect every scene after rendering. `--output PATH` writes a separate
+review folder. The original scout GIF is read only to extract held scenes for its
+static alternative; neither it nor the office GIF is regenerated.
 
-Open the GIFs and PNGs at normal README width. Check readable labels, no clipping,
-correct decision gates, all frames decoding, and the complete loop. The animation
-illustrates workflow stages, not independent language-model agents. The original
-office animation remains the README hero. Earlier explainer assets remain available
-in `docs/`; the current guide animations replace them in the workflow explanation.
+Review the GIFs at normal README width. Check moving-document paths, readable
+labels, no clipping, every frame decoding, correct decision gates and full loops.
+The names are workflow stages, not independent language-model agents.
+
+The earlier blue/teal slideshow assets and their two rendering scripts remain in
+the repository as prior designs. The README no longer references them. The old
+`what-passes.png` is also unused because its bare-remote eligibility explanation
+does not match the current conservative checks.
