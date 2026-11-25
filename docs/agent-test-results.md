@@ -1,0 +1,123 @@
+# Agent verification: local review branch
+
+Date: 2026-11-24. Branch: `codex/evidence-based-job-workflow`.
+Baseline: `d870e0eead74e3d232e54caab1fa1561a1332fe2`.
+
+## Automated checks
+
+- 57 unittest cases passed locally on Windows with Python 3.11. The original
+  baseline had 26 tests; existing behavior tests were updated where the agreed
+  matching contract deliberately changed.
+- Regressions cover common-word matches, aliases, missing required skills,
+  unknown experience, EMEA/country/hybrid restrictions, negative sponsorship,
+  relocation without visa support and existing work rights.
+- Profile confirmation becomes invalid after edits. Runs ignore stale reports;
+  all-source failure preserves the last successful pointer.
+- Full ads and board errors are retained; malformed feeds fail visibly. A
+  concurrent fake HTTP boundary verified no more than eight active requests.
+- Invented metrics, arbitrary overview claims, changed contacts/dates/skills,
+  dropped roles/projects/languages and multiple roles at one employer are checked.
+- Job URL identity preserves Greenhouse job query IDs and removes tracking noise.
+  Duplicate outcomes block that job without blocking another job at the company.
+- Converter failure retains previous successful DOCX/PDF artifacts. A Windows
+  long-path regression covers short atomic-write filenames.
+- `compileall` and `git diff --check` passed. Private profiles, preview images,
+  temporary converter files and SQLite history are ignored.
+- The skill-creator validator accepted all four repo skills. Its optional YAML
+  dependency was installed under ignored `tmp/`, not added to runtime requirements.
+
+## Live source and workflow checks
+
+- Tested 40 prospective platform/token pairs; selected 23 working, nonempty
+  boards. The final configured-source recheck returned 23 healthy, 0 failed.
+  This is point-in-time endpoint evidence, not comprehensive worldwide coverage.
+- An isolated live search using the fictional Ada example completed: 32 raw
+  candidates across selected scouts, 9 shortlisted, 2 fact-checked CV drafts,
+  7 held for verification. PDF rendering was deliberately disabled for that live
+  test. No real mailbox was read and no application was submitted.
+- The first live attempt exposed a Windows path-length failure. Short atomic
+  temporary filenames and bounded output folder names fixed it; the rerun passed.
+
+## PDF checks
+
+- Ran the complete offline fictional demo with LibreOffice on Windows. The
+  deliberately failed fixture board correctly made the result partial.
+- Generated two one-page PDFs and matching DOCX files for distinct jobs at the
+  same fictional company. Uncertain relocation received no resume.
+- Extracted text retained candidate identity, role, project and spoken languages.
+- Verified three clickable links in each PDF (email, GitHub contact, project).
+- Rendered and inspected every page: readable text, no clipping or overlap.
+- Windows converter process waiting and error reporting were fixed during these
+  checks. Atomic publication preserves prior successful output on conversion failure.
+
+## Still pending / limitations
+
+- User acceptance: follow `docs/manual-testing.md` and record results privately.
+- CI is configured for Windows and Linux but was not run remotely; no push occurred.
+- PDF inspection used fictional one-page documents. The existing tests exercise
+  longer document structure; users should inspect their own multi-page output.
+- Requirement and country extraction remain explicit heuristics, with known limits
+  documented in README. Human review of the full ad remains necessary.
+- Legacy company-wide exclusions are retained, not silently migrated. Existing
+  real profiles require explicit confirmation under the new digest-based gate.
+- No merge, publication, email, real-profile search or application submission was
+  performed during implementation testing.
+
+## Follow-up: confirmed remote sponsorship wording
+
+Removed the blanket remote-resume `visa` keyword rejection. Five added regression
+tests reproduced the pre-fix failures and passed after the change: confirmed
+sponsorship statements, altered work-right rejection, a confirmed employer named
+Visa, faithful revision/recheck, and the pipeline reaching the renderer. The
+pipeline test uses a mocked rendering boundary and also verifies Canada-only
+remote exclusion. No new live search or PDF conversion was needed for this
+validation-only change. The complete local suite now passes 62 tests;
+`git diff --check` passes. Submission and eligibility safeguards are unchanged.
+
+## Follow-up: suitability and coverage audit (2026-11-25)
+
+- 86 local unittest cases pass. New regressions cover experience 2/3/5/8/20,
+  core expertise, preferred and alternative requirements, heading variations,
+  unknown mandatory platforms, cardinality uncertainty, parenthetical preferences,
+  Brazil/North America/in-person restrictions, title aliases, Internal Tools,
+  EMEA full-ad evidence, freshness and employer discovery.
+- Replayed the saved 1,683-posting investigation. The revised early gates retain
+  133 for full assessment, versus 26 in the November 24 snapshot. This is recall,
+  not 133 suitable jobs. The saved web role now reaches assessment and is excluded
+  for missing Linux evidence. Wynd Labs remains visible with optional Go correctly
+  preferred and remote eligibility unresolved.
+- Public search found two employers outside the 23 seeds. Import verified their
+  official public ATS feeds; an isolated fictional live search reached 25 healthy
+  boards. Full captured ads were replayed after parser refinements without further
+  network requests. No real mailbox or application was touched.
+- Employer expansion is search-tool-assisted: standalone CLI runs without imported
+  results explicitly report seed_only. No search-engine scraper or false claim of
+  exhaustive worldwide coverage was added. Cached discovery expires after seven days.
+- Unknown mandatory expertise or complex cardinality requires verification. These
+  remain explainable heuristics, not complete natural-language understanding.
+- The fictional renderer demo still produces two source-backed application PDFs;
+  no template/layout change is part of this correction. Manual user acceptance
+  and remote Windows/Linux CI remain pending. No merge, push or publication occurred.
+
+## Follow-up: adversarial assessment corrections (2026-11-25)
+
+- Reproduced all ten audit failures before implementation, then added them to
+  `tests/test_adversarial.py`. The original standalone reproduction now passes.
+- Fixed country/region exceptions, attendance negation, company-versus-candidate
+  location context, independent mandatory/preferred clauses, preservation of prior
+  mandatory requirements across alternatives, decimal and differently phrased
+  experience durations, and negative candidate claims counting as expertise.
+- Added controls for unaffected countries, unknown exception geography, real office
+  requirements following unrelated denials, mixed headquarters/hiring sentences,
+  optional experience, range minima, positive evidence after a denial, and
+  `never_add` expertise. Country restrictions remain narrower than region labels.
+- All 105 local unittest cases pass. The excluded-country workflow regression
+  verifies that the mocked renderer is never called. It does not submit a job or
+  depend on a PDF converter.
+- The isolated offline demo at `tmp/adversarial-fix-demo` completes with the expected
+  partial source coverage, three shortlisted jobs, two drafts, one verification
+  hold, and no errors. PDF conversion was disabled; rendering/layout code did not
+  change and was not visually revalidated during this correction.
+- Natural-language extraction remains heuristic. These tests cover the stated
+  examples and nearby controls, not every possible ad wording. User acceptance
+  and remote CI remain pending; nothing was merged, published or submitted.

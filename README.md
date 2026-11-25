@@ -1,139 +1,176 @@
 # job-search-agency
 
-A small agency that looks for jobs, then stops and waits for you. You talk only to Sami. Sami asks three questions, sends the team out, and comes back with every role that overlaps your resume, best match first. Each of those roles gets its own resume. Nothing is emailed and nothing is submitted until you say yes to a specific one.
+A local job-search assistant: find openings, explain eligibility and skill gaps,
+prepare truthful resumes, then stop for the person's decision.
 
-Open this repo in Cursor, Claude, Codex, DeepSeek, or anything else that reads [`AGENTS.md`](AGENTS.md). That file is the contract. This page is the picture.
+**Release:** [v0.3.0](https://github.com/MohamedAliTrabelsiSE/job-search-agency/releases/tag/v0.3.0)
+— [what changed](CHANGELOG.md). Existing users should review the upgrade notes.
 
-![The agency at night: the team at their desks, one person asleep, and a board on the wall](docs/the-office.gif)
+![The agency](docs/the-office.gif)
 
-## Start here
+Sami is your contact. Ida reads mail; Remy, Nico, Lina and Esme search; Theo ranks;
+Maya drafts and Marco checks. The names label workflow stages. The core pipeline
+is deterministic Python, not a collection of autonomous model agents.
 
-You need Python 3.11.
+## Start
 
-```bash
+Python 3.11+, `python-docx`, and LibreOffice or Microsoft Word for PDFs:
+
+```powershell
 pip install -r requirements.txt
 python -m unittest discover -s tests -p "test_*.py"
+python src/demo.py --root tmp/demo
 ```
 
-Then open this folder in your agent and wait. It asks three questions before it searches. On Windows, if `python` is not on PATH, use `py -3`.
+On Windows use `py -3`, or `.venv\Scripts\python.exe` if the launcher is unavailable.
+The demo uses a fictional candidate and jobs. It makes no network requests, reads
+no mail, and submits nothing. Add `--no-render` to test decisions without a PDF
+converter. Use the [manual checks](docs/manual-testing.md) to verify your setup.
+Contributors should complete them before merging or publishing changes.
+[Implementation plan](docs/implementation-plan.md).
 
-Feedback goes in a [discussion](https://github.com/MohamedAliTrabelsiSE/job-search-agency/discussions) or an [issue](https://github.com/MohamedAliTrabelsiSE/job-search-agency/issues). Do not paste a real resume, a phone number, or a mail password. See [CONTRIBUTING.md](CONTRIBUTING.md).
+## Onboarding
 
-## A morning
+Open the repo in your coding assistant and follow [AGENTS.md](AGENTS.md). It asks
+for a general resume, reads back its facts for confirmation, then asks remote or
+relocation preferences and work-right needs. Save these privately under `data/`.
 
-![Six steps: you talk to the lead, answer three questions, the inbox and scouts start together, matching jobs come back, each gets a resume, then everything stops](docs/how-it-works.gif)
+```powershell
+python src/profile.py show
+python src/profile.py confirm --name "YOUR EXACT NAME"
+python src/preview_cv.py
+```
 
-1. You talk only to Sami.
-2. Sami asks for your resume, whether you want remote work or relocation or both, and whether you can legally work that way. Sami reads the resume back and waits.
-3. Ida reads the mail. Remy, Nico, Lina, and Esme search at the same time. They hand back notes. They do not talk to each other.
-4. Repeats, companies you already applied to, and rejections drop out. Theo keeps every remaining ad that shares words with your resume, best first. An ad with no shared words is listed and not drafted.
-5. Maya makes one resume per kept job, from the same facts. Marco checks it once. The page is one column: your name and title, a short overview, then experience, projects, education, skills, and languages.
-6. The run stops. You decide.
+Confirmation is bound to the exact JSON contents. Changed facts/preferences require
+another review. Existing files alone cannot start a search. `profile.py fresh-start`
+archives profile/history without deleting earlier resumes. Never commit a real CV.
 
-## Who goes looking
+## A search
 
-![Remote sends a worldwide scout, relocate sends one scout per region, both sends both](docs/who-searches.gif)
+```powershell
+python src/morning.py --skip-inbox
+```
 
-Remy searches worldwide. Nico covers Germany and Austria. Lina covers the Netherlands, Belgium, and Ireland. Esme covers Sweden, Denmark, Finland, and Norway. Ida runs only when you have connected mail. Without that, the search still runs.
+Omit `--skip-inbox` to let Ida read mail when `~/.dsh/smtp.txt` exists (address,
+then app password). She never sends. New search artifacts live in
+`data/runs/<run-id>/`; `data/latest-run.json` points to the processed run. The run
+contains source health, pool, shortlist, reviews, summary and the file handoff.
+Resumes live in `outbox/<run-id>/<company-role-job-id>/`.
 
-## How a resume is checked
+The search covers seed and runtime-discovered public Ashby, Lever and Greenhouse boards. It reports
+healthy/failed boards and description-fetch failures. **No matches is not proof
+that no jobs exist.** An all-source failure cannot replace the last successful run.
 
-![The same resume layout starts as section labels, fills with every role and project, marks the lines that match this job, then continues on the next sheet if needed](docs/the-page.gif)
+Eligibility separates permitted countries, visa sponsorship and relocation help.
+Each conclusion has evidence; uncertainty stays visible. Technical matching shows
+matched skills, missing required skills and experience evidence. Scores are
+deterministic overlap heuristics, not probabilities or employer assessments.
 
-![The writer drafts from your real experience, the ATS specialist checks it, findings go back once, the writer fixes once, then the resume passes or is blocked](docs/ats-loop.gif)
-
-Maya fills the resume fields and does not design a second layout. The shape is [`templates/professional.md`](templates/professional.md). `src/render_cv.py` fills [`templates/professional.docx`](templates/professional.docx). Every role and every project stays, and a long list continues onto the next sheet. Maya may reorder and reword bullets. Maya may not add a skill, a metric, or a job that was not in your general resume. A gap stays a gap. The visa line appears only on a relocation resume. Marco sends findings once, Maya fixes once, and there is no third draft. A blocked resume is not saved. A recruiter who wrote with no specific opening gets the general resume you already gave.
-
-## Which ads get through
-
-![Full remote passes work-from-anywhere and a bare remote, and fails a country lock. Relocation passes visa help and fails an existing right-to-work requirement](docs/what-passes.png)
-
-A pass only means the text of the ad got through. It is not permission to apply. Jobs with US hours, or contract-only jobs, stay visible.
-
-## What each one writes
-
-You never talk to the workers. The only reply inside the agency is Marco's list of findings, which Maya fixes once. The name is what you see. The job is the rule.
-
-| Who | Writes |
+| Decision | Result |
 | --- | --- |
-| Ida, inbox | `data/inbox.json`, and rejected companies in `data/roles.json` |
-| Remy, Nico, Lina, Esme | `data/scout-worldwide.json`, `data/scout-dach.json`, `data/scout-benelux-ie.json`, `data/scout-nordics.json` |
-| Merger | `data/pool.json`, every text-pass card |
-| Theo, ranker | `data/shortlist.json`, every resume match, best first |
-| Maya, writer | `outbox/<company>-<title>/cv.json` |
-| Marco, ATS specialist | `outbox/<company>-<title>/ats.json` |
+| recommended | Understood requirements, supported essential expertise, no extracted gaps, eligible location |
+| stretch | Minor skill or bounded experience gap; essential expertise is supported |
+| needs_verification | Eligibility, requirements or experience evidence is unresolved; no resume yet |
+| excluded | Explicit incompatibility, substantial experience gap, missing essential expertise, or no technical overlap |
 
-## First run
+Required, preferred and one-of alternatives retain section evidence. Preferred
+skills never become mandatory just because they say "experience with". A two-year
+candidate meets a two-year minimum, may stretch to three, and is excluded for
+five/eight/twenty years. The default experience stretch permits at most one year
+and requires at least two-thirds of the stated duration; customize
+`matching_policy.max_experience_gap` and `matching_policy.min_experience_ratio`
+in confirmed preferences. Scores include experience penalties. Technology overlap
+alone cannot establish a recommendation when requirements are not understood.
 
-If `data/cv_facts.json` or `data/preferences.json` is missing, Sami stops. No scout runs. It asks, in this order:
+All distinct job URLs stay available; multiple openings at one company can survive.
+Legacy `roles.json` company exclusions remain supported. New application history
+uses job URLs, so one duplicate opening need not suppress all future company jobs.
 
-1. **Your general resume.** A PDF, a text file, or a paste. It reads only what is written, shows you that reading, and waits for you to correct it. Then it saves `data/cv_facts.json`: contact, education, each role, the bullets you already have, languages, activities, and `never_add` (tools the resume does not claim). After you confirm, it renders `outbox/preview/resume.pdf` in the locked layout. That file is the one to apply with. `resume.docx` is the same page. The file you uploaded is only the source of the facts.
-2. **Your interest.** Full remote from where you already live, relocate, or both. Relocate asks which places. More than one place is normal.
-3. **Work right, in your words.** Relocation: whether you need a visa. Full remote: that you will keep working from your current country. Saved in `data/preferences.json`.
+## Resumes
 
-Both files are gitignored. So is your inbox, your skip list, and every resume the morning writes. [`config/cv_facts.example.json`](config/cv_facts.example.json) and [`config/preferences.example.json`](config/preferences.example.json) are a fictional person, so the shape is visible. Do not put a real resume in them.
+The renderer fills `templates/professional.docx`. All roles, projects, source
+bullets, education and spoken languages stay. Automated bullets are copied from
+confirmed facts and reordered; arbitrary rewrites require factual review.
 
-Someone who clones this repo starts with an empty skip list. Your applications are not theirs.
+Each job folder has `card.json`, `cv.json`, `ats.json`, `resume.pdf`, `resume.docx`,
+and `resume.txt` when rendering succeeds. The PDF is the application file; DOCX is
+the same content. Failed conversion preserves earlier successful files.
 
-## Run a morning
+`ats.json` reports factual checks, gaps and rendering separately. It does not
+claim to reproduce an employer's ATS, guarantee selection, or replace visual PDF
+inspection. Another layout requires a confirmed `template_override` preference.
 
-Search uses Python 3.11 and the standard library. Rendering a resume also needs `python-docx`. The PDF is written by LibreOffice or Microsoft Word.
+## Sources
 
-```bash
-pip install -r requirements.txt
-python tests/test_screen.py
-python tests/test_agency.py
-python src/morning.py
+```powershell
+python src/source_health.py
 ```
 
-On Windows, if `python` is not on PATH, use `py -3` in place of `python`.
+Source lists are under `config/sources/`. The committed
+[validation snapshot](config/source-health.snapshot.json) records a dated public
+endpoint check. Active boards can change or return zero jobs. Run the health check
+again rather than assuming a snapshot proves current availability. All scout
+requests share one eight-request limit. Fetches retry transient failures only.
 
-`morning.py` refuses to start while the two profile files are missing. After you have confirmed them, it reads the inbox when `~/.dsh/smtp.txt` exists (an address, then an app password), runs the scouts your answer turned on, merges them, ranks every ad that shares words with your resume, and renders `resume.pdf`, `resume.docx`, and `resume.txt` for each of those. The PDF is the file to apply with. Then it prints `Stopped. Nothing was submitted and nothing was sent.`
+Regions currently cover Germany/Austria, Netherlands/Belgium/Ireland and the
+Nordics; selecting another country does not automatically add sources for it.
 
-`python src/send.py` exits on purpose. There is no mail sender in this repository, and no LinkedIn client. Do not add one.
+### Discover employers beyond the seed list
 
-## Your own boards
+The coding assistant uses its public web-search tool, then imports the result
+URLs. The CLI does not scrape search engines or pretend to have a search service.
 
-Public Ashby, Lever, and Greenhouse boards only. Edit the lists under [`config/sources/`](config/sources/) or copy [`config/sources.example.yaml`](config/sources.example.yaml):
-
-```bash
-python src/discover.py --sources config/sources.example.yaml --rules config/rules.example.yaml
+```powershell
+python src/employers.py queries
+# Assistant executes those searches and saves results privately.
+python src/employers.py import --results tmp/public-search-results.json
+python src/morning.py --skip-inbox
 ```
 
-- `ashby`, `lever`, and `greenhouse` are lists of public board tokens.
-- `location_tokens`, `title_allow`, and `seniority_block` are case-insensitive substrings.
-- `cutoff_days` drops older ads. Greenhouse dates are last-updated, not first-published.
-- A block phrase is masked before offer phrases are searched, so a sentence that refuses a visa is not read as an offer.
+Input shape: `{"queries":["query"],"results":[{"url":"https://jobs.ashbyhq.com/company/job-id","query":"query","scouts":["worldwide"]}]}`.
+Use `dach`, `benelux-ie` or `nordics` for relocation search results as appropriate.
+Supported official ATS URLs are parsed, deduplicated and verified against their
+public feeds. Imported boards live in private `data/employer-discovery.json`,
+expire after seven days, and are merged at runtime without editing the seed list.
+Each run reports `market_discovery` separately from board health. Without search
+evidence, it explicitly reports **seed_only** coverage. Even expanded search is
+not exhaustive. Unsupported/custom career hosts are reported for review.
 
-To keep a company off the shortlist, create `data/roles.json` (gitignored):
+Posting age is separate from availability: each fetched ad is `observed_listed`,
+not guaranteed accepting applications. Dates are recent/older/unknown. Default
+`freshness_mode: prefer` retains older and undated listed jobs; `recent_only`
+filters known older dates using `cutoff_days` while retaining unknown dates visibly.
 
-```json
-{ "applied": ["northwind"], "rejected": ["example-corp"] }
-```
+## Application preparation and history
 
-The names are board tokens, compared case-insensitively.
+`src/applications.py --help` exposes local preflight and outcome recording. It
+collects salary/currency, availability, education category and sponsorship needs,
+checks previous job-level applications, and requires explicit approval before a
+submitted outcome can be recorded. An observed result supplies evidence.
 
-## Layout
+These commands do not submit anything. `src/send.py` deliberately refuses to send;
+there is no LinkedIn client or auto-apply browser. See [safety](docs/safety.md).
 
-```
-AGENTS.md          the contract every agent runtime follows
-config/            fictional profile, rules, and board tokens
-prompts/           ranker, writer, and ATS specialist
-src/morning.py     inbox, scouts, merge, rank, then resumes
-src/send.py        refuses
-docs/              the diagrams on this page, and safety.md
-data/              gitignored. created on your machine
-outbox/            gitignored resumes, one folder per job
-```
+## Development
+
+Tests use fictional facts and injected public-API fixtures. CI runs logic tests
+and the offline demo on Windows and Linux. Local PDF rendering and visual review
+remain separate acceptance checks. Private JSON, SQLite history, outbox files and
+temporary page images are gitignored.
+
+Repo [skills](skills/job-research/SKILL.md) are routed by AGENTS.md; they are not
+installed globally by this project. Keep [manual test results](docs/manual-testing.md)
+under ignored `tmp/` and publish only after reviewing the diff for private data.
 
 ## Known limits
 
-Some board names in `config/sources/` return nothing. The application file is `resume.pdf`, written from `resume.docx` by LibreOffice or Microsoft Word. Without one of those, the Word file is still written and the PDF step stops. `src/send.py` exits on purpose: this repo cannot email anyone and cannot click Apply.
+Country aliases, required-skill extraction and experience parsing are conservative
+heuristics, not legal advice or semantic understanding. Unrecognized requirements
+can be missed. Read the full ad and verify ambiguous eligibility with the employer.
+The optional freshness filter uses source timestamps; Greenhouse timestamps mean
+updated, not necessarily first published. Unknown geographic restrictions require
+verification rather than permission. Mail classification and legacy company
+exclusions can be coarse. Resume checks deliberately block unsupported rewrites.
 
-## Terms
-
-Public posting APIs only, at most 8 concurrent requests, no login, no Apply click. Details are in [`docs/safety.md`](docs/safety.md).
-
-## Licence
-
-[MIT](LICENSE).
+MIT licence. Feedback: [issues](https://github.com/MohamedAliTrabelsiSE/job-search-agency/issues)
+or [discussions](https://github.com/MohamedAliTrabelsiSE/job-search-agency/discussions).

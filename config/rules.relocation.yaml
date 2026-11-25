@@ -1,5 +1,6 @@
 mode: relocation
 cutoff_days: 21
+freshness_mode: prefer
 
 location_tokens:
   - germany

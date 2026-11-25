@@ -1,0 +1,288 @@
+{
+  "checked_at": "2026-11-24T19:55:01.027192+00:00",
+  "meaning": "Point-in-time public endpoint validation, not a hiring or geographic eligibility guarantee. Empty boards and failed adapters are omitted from active source lists.",
+  "active_boards": [
+    {
+      "platform": "ashby",
+      "company": "adjoe",
+      "status": "healthy",
+      "jobs": 40,
+      "checked_at": "2026-11-24T19:54:55.713763+00:00"
+    },
+    {
+      "platform": "ashby",
+      "company": "almedia",
+      "status": "healthy",
+      "jobs": 40,
+      "checked_at": "2026-11-24T19:54:55.893265+00:00"
+    },
+    {
+      "platform": "ashby",
+      "company": "augustus",
+      "status": "healthy",
+      "jobs": 12,
+      "checked_at": "2026-11-24T19:54:55.131042+00:00"
+    },
+    {
+      "platform": "ashby",
+      "company": "elevenlabs",
+      "status": "healthy",
+      "jobs": 118,
+      "checked_at": "2026-11-24T19:54:55.637628+00:00"
+    },
+    {
+      "platform": "ashby",
+      "company": "enpal",
+      "status": "healthy",
+      "jobs": 186,
+      "checked_at": "2026-11-24T19:54:55.924107+00:00"
+    },
+    {
+      "platform": "ashby",
+      "company": "linear",
+      "status": "healthy",
+      "jobs": 30,
+      "checked_at": "2026-11-24T19:54:56.919980+00:00"
+    },
+    {
+      "platform": "ashby",
+      "company": "lunar",
+      "status": "healthy",
+      "jobs": 15,
+      "checked_at": "2026-11-24T19:54:55.968513+00:00"
+    },
+    {
+      "platform": "ashby",
+      "company": "mollie",
+      "status": "healthy",
+      "jobs": 48,
+      "checked_at": "2026-11-24T19:54:55.938565+00:00"
+    },
+    {
+      "platform": "ashby",
+      "company": "nango",
+      "status": "healthy",
+      "jobs": 3,
+      "checked_at": "2026-11-24T19:54:55.602640+00:00"
+    },
+    {
+      "platform": "ashby",
+      "company": "pleo",
+      "status": "healthy",
+      "jobs": 32,
+      "checked_at": "2026-11-24T19:54:56.258715+00:00"
+    },
+    {
+      "platform": "ashby",
+      "company": "posthog",
+      "status": "healthy",
+      "jobs": 10,
+      "checked_at": "2026-11-24T19:54:56.087092+00:00"
+    },
+    {
+      "platform": "ashby",
+      "company": "resend",
+      "status": "healthy",
+      "jobs": 11,
+      "checked_at": "2026-11-24T19:54:56.299544+00:00"
+    },
+    {
+      "platform": "ashby",
+      "company": "supabase",
+      "status": "healthy",
+      "jobs": 80,
+      "checked_at": "2026-11-24T19:54:56.537721+00:00"
+    },
+    {
+      "platform": "greenhouse",
+      "company": "adyen",
+      "status": "healthy",
+      "jobs": 242,
+      "checked_at": "2026-11-24T19:54:56.432495+00:00"
+    },
+    {
+      "platform": "greenhouse",
+      "company": "canonical",
+      "status": "healthy",
+      "jobs": 317,
+      "checked_at": "2026-11-24T19:54:56.832976+00:00"
+    },
+    {
+      "platform": "greenhouse",
+      "company": "contentful",
+      "status": "healthy",
+      "jobs": 49,
+      "checked_at": "2026-11-24T19:54:56.609686+00:00"
+    },
+    {
+      "platform": "greenhouse",
+      "company": "flipdish",
+      "status": "healthy",
+      "jobs": 11,
+      "checked_at": "2026-11-24T19:54:56.627203+00:00"
+    },
+    {
+      "platform": "greenhouse",
+      "company": "fourthline",
+      "status": "healthy",
+      "jobs": 4,
+      "checked_at": "2026-11-24T19:54:56.814065+00:00"
+    },
+    {
+      "platform": "greenhouse",
+      "company": "gitlab",
+      "status": "healthy",
+      "jobs": 252,
+      "checked_at": "2026-11-24T19:54:57.071066+00:00"
+    },
+    {
+      "platform": "greenhouse",
+      "company": "nearform",
+      "status": "healthy",
+      "jobs": 23,
+      "checked_at": "2026-11-24T19:54:56.972557+00:00"
+    },
+    {
+      "platform": "greenhouse",
+      "company": "raisin",
+      "status": "healthy",
+      "jobs": 32,
+      "checked_at": "2026-11-24T19:54:57.050141+00:00"
+    },
+    {
+      "platform": "greenhouse",
+      "company": "trustpilot",
+      "status": "healthy",
+      "jobs": 38,
+      "checked_at": "2026-11-24T19:54:57.337150+00:00"
+    },
+    {
+      "platform": "lever",
+      "company": "spotify",
+      "status": "healthy",
+      "jobs": 89,
+      "checked_at": "2026-11-24T19:55:01.026137+00:00"
+    }
+  ],
+  "inactive_checks": [
+    {
+      "platform": "ashby",
+      "company": "calcom",
+      "status": "failed",
+      "error": "HTTP Error 404: Not Found",
+      "checked_at": "2026-11-24T19:54:54.411098+00:00"
+    },
+    {
+      "platform": "ashby",
+      "company": "deel",
+      "status": "healthy",
+      "jobs": 0,
+      "checked_at": "2026-11-24T19:54:54.384836+00:00"
+    },
+    {
+      "platform": "ashby",
+      "company": "doctorly",
+      "status": "failed",
+      "error": "HTTP Error 404: Not Found",
+      "checked_at": "2026-11-24T19:54:54.384836+00:00"
+    },
+    {
+      "platform": "ashby",
+      "company": "mews",
+      "status": "failed",
+      "error": "HTTP Error 404: Not Found",
+      "checked_at": "2026-11-24T19:54:55.173170+00:00"
+    },
+    {
+      "platform": "ashby",
+      "company": "remote",
+      "status": "failed",
+      "error": "HTTP Error 404: Not Found",
+      "checked_at": "2026-11-24T19:54:56.119569+00:00"
+    },
+    {
+      "platform": "greenhouse",
+      "company": "backbase",
+      "status": "failed",
+      "error": "HTTP Error 404: Not Found",
+      "checked_at": "2026-11-24T19:54:56.272033+00:00"
+    },
+    {
+      "platform": "greenhouse",
+      "company": "bynder",
+      "status": "failed",
+      "error": "HTTP Error 404: Not Found",
+      "checked_at": "2026-11-24T19:54:56.445496+00:00"
+    },
+    {
+      "platform": "greenhouse",
+      "company": "clark",
+      "status": "failed",
+      "error": "HTTP Error 404: Not Found",
+      "checked_at": "2026-11-24T19:54:56.554720+00:00"
+    },
+    {
+      "platform": "greenhouse",
+      "company": "getsafe",
+      "status": "failed",
+      "error": "HTTP Error 404: Not Found",
+      "checked_at": "2026-11-24T19:54:56.799187+00:00"
+    },
+    {
+      "platform": "greenhouse",
+      "company": "klarna",
+      "status": "failed",
+      "error": "HTTP Error 404: Not Found",
+      "checked_at": "2026-11-24T19:54:56.826975+00:00"
+    },
+    {
+      "platform": "greenhouse",
+      "company": "mollie",
+      "status": "failed",
+      "error": "HTTP Error 404: Not Found",
+      "checked_at": "2026-11-24T19:54:56.917985+00:00"
+    },
+    {
+      "platform": "greenhouse",
+      "company": "sendcloud",
+      "status": "failed",
+      "error": "HTTP Error 404: Not Found",
+      "checked_at": "2026-11-24T19:54:57.036683+00:00"
+    },
+    {
+      "platform": "greenhouse",
+      "company": "sennder",
+      "status": "failed",
+      "error": "HTTP Error 404: Not Found",
+      "checked_at": "2026-11-24T19:54:57.126247+00:00"
+    },
+    {
+      "platform": "greenhouse",
+      "company": "taxfix",
+      "status": "failed",
+      "error": "HTTP Error 404: Not Found",
+      "checked_at": "2026-11-24T19:54:57.147398+00:00"
+    },
+    {
+      "platform": "greenhouse",
+      "company": "tiqets",
+      "status": "failed",
+      "error": "HTTP Error 404: Not Found",
+      "checked_at": "2026-11-24T19:54:57.147398+00:00"
+    },
+    {
+      "platform": "greenhouse",
+      "company": "traderepublic",
+      "status": "healthy",
+      "jobs": 0,
+      "checked_at": "2026-11-24T19:54:57.175445+00:00"
+    },
+    {
+      "platform": "lever",
+      "company": "mistral",
+      "status": "failed",
+      "error": "HTTP Error 404: Not Found",
+      "checked_at": "2026-11-24T19:54:58.332208+00:00"
+    }
+  ]
+}

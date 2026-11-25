@@ -1,17 +1,10 @@
+# Validated public boards; see config/source-health.snapshot.json.
 ashby:
-  - augustus
-  - almedia
   - adjoe
-  - taxfix
-  - raisin
+  - almedia
+  - augustus
   - enpal
-  - clark
-  - getsafe
-  - traderepublic
-  - sennder
-  - doctorly
-  - contentful
-
 lever: []
-
-greenhouse: []
+greenhouse:
+  - contentful
+  - raisin

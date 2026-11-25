@@ -1,16 +1,9 @@
+# Validated public boards; see config/source-health.snapshot.json.
 ashby:
   - mollie
+lever: []
+greenhouse:
   - adyen
-  - bunq
-  - tiqets
-  - bynder
-  - backbase
-  - sendcloud
-  - mews
+  - flipdish
   - fourthline
   - nearform
-  - flipdish
-
-lever: []
-
-greenhouse: []

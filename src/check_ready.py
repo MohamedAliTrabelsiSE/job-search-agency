@@ -31,6 +31,11 @@ def missing(root=None):
 def ensure_ready(root=None):
     absent = missing(root)
     if not absent:
-        return
+        from profile import ready_errors
+        errors = ready_errors(root or ROOT)
+        if not errors:
+            return
+        sys.stderr.write('\n'.join(errors) + '\nRun profile.py show, review with the person, then profile.py confirm --name NAME.\n')
+        raise SystemExit(2)
     sys.stderr.write("Missing " + ", ".join(absent) + ".\n" + INTERVIEW + "\n")
     raise SystemExit(2)

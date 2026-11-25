@@ -1,12 +1,8 @@
+# Validated public boards; see config/source-health.snapshot.json.
 ashby:
-  - spotify
-  - klarna
-  - trustpilot
-  - pleo
-  - visma
   - lunar
-  - schibsted
-
-lever: []
-
-greenhouse: []
+  - pleo
+lever:
+  - spotify
+greenhouse:
+  - trustpilot

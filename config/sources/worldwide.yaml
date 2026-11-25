@@ -1,8 +1,27 @@
+# Validated public boards; see config/source-health.snapshot.json.
 ashby:
-  - huggingface
-  - mistral
-
-lever: []
-
+  - adjoe
+  - almedia
+  - augustus
+  - elevenlabs
+  - enpal
+  - linear
+  - lunar
+  - mollie
+  - nango
+  - pleo
+  - posthog
+  - resend
+  - supabase
+lever:
+  - spotify
 greenhouse:
+  - adyen
+  - canonical
+  - contentful
+  - flipdish
+  - fourthline
   - gitlab
+  - nearform
+  - raisin
+  - trustpilot

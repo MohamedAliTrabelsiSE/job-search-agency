@@ -25,36 +25,49 @@ def blocked_companies(roles):
 
 def merge_cards(scout_files, roles, limit=None):
     blocked = blocked_companies(roles or {})
-    seen = set()
+    seen = {}
     cards = []
     for path in scout_files:
         payload = json.loads(Path(path).read_text(encoding="utf-8"))
         region = Path(path).stem.replace("scout-", "")
         path_kind = "worldwide" if region == "worldwide" else "relocation"
         for job in payload.get("candidates") or []:
-            if job.get("sponsorship") != "offered":
+            eligibility = job.get('eligibility')
+            if eligibility and eligibility.get('status') == 'excluded':
+                continue
+            if not eligibility and job.get("sponsorship") != "offered":
                 continue
             company = (job.get("company") or "").lower()
-            if not company or company in seen or company in blocked:
+            key = job.get('url') or (company, job.get('title'), job.get('location'))
+            if not company or company in blocked:
                 continue
-            seen.add(company)
             card = dict(job)
             card["path"] = path_kind
             card["scout"] = region
+            if key in seen:
+                index = seen[key]
+                old_status = cards[index].get('eligibility', {}).get('status', 'eligible')
+                new_status = card.get('eligibility', {}).get('status', 'eligible')
+                if old_status != 'eligible' and new_status == 'eligible':
+                    cards[index] = card
+                continue
+            seen[key] = len(cards)
             cards.append(card)
-            if limit is not None and len(cards) >= limit:
-                return cards
-    return cards
+    return cards[:limit] if limit is not None else cards
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(description='Merge only reports from one search run.')
+    parser.add_argument('--run-dir', type=Path, required=True)
+    args = parser.parse_args()
     ensure_ready(ROOT)
     data = ROOT / "data"
-    files = sorted(data.glob("scout-*.json"))
+    files = sorted(args.run_dir.glob("scout-*.json"))
     roles_path = data / "roles.json"
     roles = load_json(roles_path) if roles_path.exists() else {}
     cards = merge_cards(files, roles)
-    out = data / "pool.json"
+    out = args.run_dir / "pool.json"
     out.write_text(json.dumps({"count": len(cards), "cards": cards}, ensure_ascii=False, indent=2), encoding="utf-8")
     from names import LEAD, speak
 
